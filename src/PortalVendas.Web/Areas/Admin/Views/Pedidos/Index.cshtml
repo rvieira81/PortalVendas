@@ -1,0 +1,58 @@
+@model PedidosAdminIndexViewModel
+@{
+    ViewData["Title"] = "Pedidos";
+    var urlBase = $"/admin/pedidos?status={Model.Status}&de={Model.De}&ate={Model.Ate}&termo={Uri.EscapeDataString(Model.Termo ?? "")}";
+}
+<h1 class="h3 mb-3">Pedidos <small class="text-muted fs-6">(@Model.Pedidos.TotalItens)</small></h1>
+
+<form method="get" class="row g-2 mb-3 align-items-end">
+    <div class="col-md-3">
+        <label for="termo" class="form-label small mb-0">Número, nome ou e-mail</label>
+        <input id="termo" name="termo" class="form-control" value="@Model.Termo" />
+    </div>
+    <div class="col-md-3">
+        <label for="status" class="form-label small mb-0">Status</label>
+        <select id="status" name="status" class="form-select">
+            <option value="">Todos</option>
+            @foreach (var s in Enum.GetValues<StatusPedido>())
+            {
+                <option value="@s" selected="@(s == Model.Status)">@s.Descricao()</option>
+            }
+        </select>
+    </div>
+    <div class="col-6 col-md-2">
+        <label for="de" class="form-label small mb-0">De</label>
+        <input id="de" name="de" type="date" class="form-control" value="@Model.De" />
+    </div>
+    <div class="col-6 col-md-2">
+        <label for="ate" class="form-label small mb-0">Até</label>
+        <input id="ate" name="ate" type="date" class="form-control" value="@Model.Ate" />
+    </div>
+    <div class="col-md-2"><button class="btn btn-outline-primary w-100">Filtrar</button></div>
+</form>
+
+<div class="table-responsive bg-white rounded border">
+    <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+            <tr><th>Pedido</th><th>Data</th><th>Cliente</th><th>Entrega</th><th class="text-end">Total</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+            @if (Model.Pedidos.Itens.Count == 0)
+            {
+                <tr><td colspan="6" class="text-center text-muted py-4">Nenhum pedido encontrado.</td></tr>
+            }
+            @foreach (var p in Model.Pedidos.Itens)
+            {
+                <tr>
+                    <td><a href="/admin/pedidos/detalhe/@p.Id">nº @p.Numero</a></td>
+                    <td class="small">@Formatacao.DataHora(p.CriadoEm)</td>
+                    <td>@p.Cliente</td>
+                    <td class="small">@p.FreteDescricao</td>
+                    <td class="text-end">@Formatacao.Moeda(p.Total)</td>
+                    <td><span class="badge text-bg-@p.Status.CorBootstrap()">@p.Status.Descricao()</span></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+<partial name="_Paginacao" model="new Paginacao(Model.Pedidos.PaginaAtual, Model.Pedidos.TotalPaginas, urlBase)" />

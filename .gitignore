@@ -1,0 +1,17 @@
+bin/
+obj/
+.vs/
+*.user
+*.suo
+TestResults/
+coverage*/
+logs/
+emails-dev/
+uploads/
+keys/
+publish/
+.sync/
+# Segredos — nunca versionar
+appsettings.Production.json
+appsettings.Homologacao.json
+*.pfx

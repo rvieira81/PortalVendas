@@ -1,0 +1,28 @@
+@inject IOptions<PortalVendas.Infrastructure.Servicos.LojaOptions> Loja
+@{
+    ViewData["Title"] = "Política de privacidade";
+}
+<article class="mx-auto" style="max-width: 760px">
+    <h1 class="h3">Política de privacidade</h1>
+    <p class="text-muted small">Modelo inicial — revise com o jurídico antes de publicar.</p>
+
+    <h2 class="h5 mt-4">Quais dados coletamos e por quê</h2>
+    <ul>
+        <li><strong>Nome, e-mail, CPF e telefone:</strong> identificar você, emitir a cobrança (o CPF é exigido pelos meios de pagamento e para a nota fiscal) e falar sobre seus pedidos.</li>
+        <li><strong>Endereços de entrega:</strong> calcular o frete e entregar os produtos. O CEP e as medidas dos produtos são enviados à plataforma de frete para cotação.</li>
+        <li><strong>Pagamentos:</strong> os dados do cartão são digitados em um formulário do Mercado Pago e não chegam aos nossos servidores. Guardamos só a bandeira e os 4 últimos dígitos.</li>
+        <li><strong>Registros de acesso:</strong> data, hora e endereço IP, por segurança e para cumprir o Marco Civil da Internet.</li>
+    </ul>
+
+    <h2 class="h5 mt-4">Com quem compartilhamos</h2>
+    <p>Mercado Pago (pagamentos), Melhor Envio e transportadoras (cotação e entrega) e o provedor de e-mail (avisos sobre pedidos). Não vendemos dados pessoais.</p>
+
+    <h2 class="h5 mt-4">Cookies</h2>
+    <p>Usamos só cookies necessários para o site funcionar: sessão de login, carrinho e proteção contra fraudes em formulários. Não usamos cookies de publicidade.</p>
+
+    <h2 class="h5 mt-4">Seus direitos (LGPD)</h2>
+    <p>Em <a href="/minha-conta/privacidade">Minha conta → Privacidade</a> você pode baixar uma cópia dos seus dados e excluir a conta. Os pedidos ficam guardados pelo prazo exigido pela legislação fiscal, sem os seus dados de contato.</p>
+
+    <h2 class="h5 mt-4">Contato do encarregado</h2>
+    <p><a href="mailto:@Loja.Value.EmailAtendimento">@Loja.Value.EmailAtendimento</a></p>
+</article>

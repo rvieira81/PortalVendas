@@ -1,0 +1,59 @@
+@model CadastroViewModel
+@{
+    ViewData["Title"] = "Criar conta";
+}
+<div class="row justify-content-center">
+    <div class="col-md-10 col-lg-7"><div class="painel painel-form">
+        <h1 class="h3 mb-4">Criar conta</h1>
+        <form method="post" action="/conta/cadastrar" asp-antiforgery="true" novalidate>
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+            <input type="hidden" asp-for="RetornarPara" />
+            <div class="mb-3">
+                <label asp-for="Nome" class="form-label"></label>
+                <input asp-for="Nome" class="form-control" autocomplete="name" />
+                <span asp-validation-for="Nome" class="text-danger small"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Email" class="form-label"></label>
+                <input asp-for="Email" class="form-control" autocomplete="email" />
+                <span asp-validation-for="Email" class="text-danger small"></span>
+            </div>
+            <div class="row g-3 mb-3">
+                <div class="col-sm-6">
+                    <label asp-for="Cpf" class="form-label"></label>
+                    <input asp-for="Cpf" class="form-control" inputmode="numeric" data-mascara="cpf" maxlength="14" />
+                    <span asp-validation-for="Cpf" class="text-danger small"></span>
+                    <div class="form-text">Exigido para emissão da cobrança e da nota fiscal.</div>
+                </div>
+                <div class="col-sm-6">
+                    <label asp-for="Telefone" class="form-label"></label>
+                    <input asp-for="Telefone" class="form-control" inputmode="tel" data-mascara="telefone" maxlength="15" autocomplete="tel-national" />
+                    <span asp-validation-for="Telefone" class="text-danger small"></span>
+                </div>
+            </div>
+            <div class="row g-3 mb-3">
+                <div class="col-sm-6">
+                    <label asp-for="Senha" class="form-label"></label>
+                    <input asp-for="Senha" class="form-control" autocomplete="new-password" />
+                    <span asp-validation-for="Senha" class="text-danger small"></span>
+                    <div class="form-text">Mínimo de 8 caracteres, com letras e números.</div>
+                </div>
+                <div class="col-sm-6">
+                    <label asp-for="ConfirmarSenha" class="form-label"></label>
+                    <input asp-for="ConfirmarSenha" class="form-control" autocomplete="new-password" />
+                    <span asp-validation-for="ConfirmarSenha" class="text-danger small"></span>
+                </div>
+            </div>
+            <div class="form-check mb-3">
+                <input asp-for="AceitouTermos" class="form-check-input" />
+                <label class="form-check-label" for="AceitouTermos">
+                    Li e aceito os <a href="/termos" target="_blank">termos de uso</a> e a <a href="/privacidade" target="_blank">política de privacidade</a>
+                </label>
+                <div><span asp-validation-for="AceitouTermos" class="text-danger small"></span></div>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Criar conta</button>
+        </form>
+        <p class="text-center mt-3 small">Já tem conta? <a href="/conta/entrar">Entrar</a></p>
+    </div>
+</div>
+</div>

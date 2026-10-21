@@ -1,0 +1,13 @@
+@{
+    var tipos = new (string Chave, string Classe)[] { ("Sucesso", "success"), ("Aviso", "warning"), ("Erro", "danger") };
+}
+@foreach (var (chave, classe) in tipos)
+{
+    if (TempData[chave] is string mensagem && !string.IsNullOrWhiteSpace(mensagem))
+    {
+        <div class="alert alert-@classe alert-dismissible fade show" role="@(classe == "danger" ? "alert" : "status")">
+            @mensagem
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+}

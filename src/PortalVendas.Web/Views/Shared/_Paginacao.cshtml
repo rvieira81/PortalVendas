@@ -1,0 +1,22 @@
+@model Paginacao
+@if (Model.TotalPaginas > 1)
+{
+    var inicio = Math.Max(1, Model.PaginaAtual - 2);
+    var fim = Math.Min(Model.TotalPaginas, Model.PaginaAtual + 2);
+    <nav aria-label="Paginação" class="mt-4">
+        <ul class="pagination justify-content-center flex-wrap">
+            <li class="page-item @(Model.PaginaAtual <= 1 ? "disabled" : "")">
+                <a class="page-link" href="@Model.Url(Model.PaginaAtual - 1)" aria-label="Página anterior">&laquo;</a>
+            </li>
+            @for (var p = inicio; p <= fim; p++)
+            {
+                <li class="page-item @(p == Model.PaginaAtual ? "active" : "")" aria-current="@(p == Model.PaginaAtual ? "page" : null)">
+                    <a class="page-link" href="@Model.Url(p)">@p</a>
+                </li>
+            }
+            <li class="page-item @(Model.PaginaAtual >= Model.TotalPaginas ? "disabled" : "")">
+                <a class="page-link" href="@Model.Url(Model.PaginaAtual + 1)" aria-label="Próxima página">&raquo;</a>
+            </li>
+        </ul>
+    </nav>
+}

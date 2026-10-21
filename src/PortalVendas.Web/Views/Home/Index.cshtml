@@ -1,0 +1,104 @@
+@model VitrineViewModel
+@{
+    ViewData["Title"] = Model.NomeCategoria ?? (string.IsNullOrEmpty(Model.Termo) ? null : $"Busca: {Model.Termo}");
+    ViewData["Descricao"] = "Produtos com entrega para todo o Brasil. Pague com Pix, cartão em até 12x ou boleto.";
+    ViewData["LarguraTotal"] = true;
+
+    var inicio = string.IsNullOrEmpty(Model.Termo) && string.IsNullOrEmpty(Model.Categoria)
+                 && string.IsNullOrEmpty(Model.PrecoMin) && string.IsNullOrEmpty(Model.PrecoMax)
+                 && Model.Produtos.PaginaAtual == 1;
+    var temFiltroPreco = !string.IsNullOrEmpty(Model.PrecoMin) || !string.IsNullOrEmpty(Model.PrecoMax);
+
+    string MontarUrl(OrdemVitrine? ordem = null)
+    {
+        var caminho = string.IsNullOrEmpty(Model.Categoria) ? "/busca" : $"/categoria/{Model.Categoria}";
+        var q = new List<string>();
+        if (!string.IsNullOrEmpty(Model.Termo)) q.Add("q=" + Uri.EscapeDataString(Model.Termo));
+        if (!string.IsNullOrEmpty(Model.PrecoMin)) q.Add("min=" + Uri.EscapeDataString(Model.PrecoMin));
+        if (!string.IsNullOrEmpty(Model.PrecoMax)) q.Add("max=" + Uri.EscapeDataString(Model.PrecoMax));
+        q.Add("ordem=" + (ordem ?? Model.Ordem));
+        return caminho + "?" + string.Join("&", q);
+    }
+
+    string LinkCategoria(string? slug)
+    {
+        var busca = string.IsNullOrEmpty(Model.Termo) ? "" : "?q=" + Uri.EscapeDataString(Model.Termo);
+        return string.IsNullOrEmpty(slug) ? (busca == "" ? "/" : "/busca" + busca) : $"/categoria/{slug}{busca}";
+    }
+
+    var titulo = Model.NomeCategoria ?? (string.IsNullOrEmpty(Model.Termo) ? "Todos os produtos" : $"Resultados para “{Model.Termo}”");
+}
+
+@if (inicio)
+{
+    <section class="boas-vindas">
+        <div class="container">
+            <h1>Tudo para a casa, o trabalho e o lazer, entregue no seu CEP.</h1>
+            <p>Escolha os produtos, veja o frete antes de fechar e pague com Pix, cartão em até 12x ou boleto.</p>
+            <ul class="garantias">
+                <li><strong>Frete na hora</strong> Correios e transportadoras, com prazo real para o seu endereço</li>
+                <li><strong>Pague como preferir</strong> Pix com confirmação imediata, cartão ou boleto</li>
+                <li><strong>Mudou de ideia?</strong> Cancele pelo site enquanto o pedido não foi enviado</li>
+            </ul>
+        </div>
+    </section>
+}
+
+<div class="container pb-5">
+    <nav class="categorias" aria-label="Categorias">
+        <a href="@LinkCategoria(null)" class="chip @(string.IsNullOrEmpty(Model.Categoria) ? "chip-ativo" : "")"
+           aria-current="@(string.IsNullOrEmpty(Model.Categoria) ? "page" : null)">Tudo</a>
+        @foreach (var c in Model.Categorias)
+        {
+            <a href="@LinkCategoria(c.Slug)" class="chip @(c.Slug == Model.Categoria ? "chip-ativo" : "")"
+               aria-current="@(c.Slug == Model.Categoria ? "page" : null)">@c.Nome</a>
+        }
+    </nav>
+
+    <div class="vitrine-barra">
+        <h2 class="vitrine-titulo">@titulo <span>@Model.Produtos.TotalItens @(Model.Produtos.TotalItens == 1 ? "produto" : "produtos")</span></h2>
+        <div class="vitrine-ferramentas">
+            <details class="filtro-preco" open="@temFiltroPreco">
+                <summary>Faixa de preço</summary>
+                <form method="get" action="@(string.IsNullOrEmpty(Model.Categoria) ? "/busca" : $"/categoria/{Model.Categoria}")">
+                    @if (!string.IsNullOrEmpty(Model.Termo))
+                    {
+                        <input type="hidden" name="q" value="@Model.Termo" />
+                    }
+                    <input type="hidden" name="ordem" value="@Model.Ordem" />
+                    <label for="min" class="visually-hidden">Preço mínimo</label>
+                    <input id="min" name="min" class="form-control form-control-sm" inputmode="decimal" placeholder="De R$" value="@Model.PrecoMin" />
+                    <label for="max" class="visually-hidden">Preço máximo</label>
+                    <input id="max" name="max" class="form-control form-control-sm" inputmode="decimal" placeholder="Até R$" value="@Model.PrecoMax" />
+                    <button class="btn btn-sm btn-primary" type="submit">Aplicar</button>
+                </form>
+            </details>
+            <label for="ordem" class="visually-hidden">Ordenar por</label>
+            <select id="ordem" class="form-select form-select-sm" data-navegar>
+                <option value="@MontarUrl(OrdemVitrine.Recentes)" selected="@(Model.Ordem == OrdemVitrine.Recentes)">Mais recentes</option>
+                <option value="@MontarUrl(OrdemVitrine.MenorPreco)" selected="@(Model.Ordem == OrdemVitrine.MenorPreco)">Menor preço</option>
+                <option value="@MontarUrl(OrdemVitrine.MaiorPreco)" selected="@(Model.Ordem == OrdemVitrine.MaiorPreco)">Maior preço</option>
+                <option value="@MontarUrl(OrdemVitrine.Nome)" selected="@(Model.Ordem == OrdemVitrine.Nome)">Nome, de A a Z</option>
+            </select>
+        </div>
+    </div>
+
+    @if (Model.Produtos.Itens.Count == 0)
+    {
+        <div class="vazio">
+            <h2>Nada encontrado por aqui</h2>
+            <p>Tente outra palavra, tire o filtro de preço ou veja todos os produtos.</p>
+            <a href="/" class="btn btn-primary">Ver todos os produtos</a>
+        </div>
+    }
+    else
+    {
+        <div class="grade-produtos">
+            @foreach (var p in Model.Produtos.Itens)
+            {
+                <partial name="_CardProduto" model="p" />
+            }
+        </div>
+        <partial name="_Paginacao" model="new Paginacao(Model.Produtos.PaginaAtual, Model.Produtos.TotalPaginas, MontarUrl())" />
+    }
+</div>

@@ -1,0 +1,10 @@
+@{
+    var atual = ViewContext.RouteData.Values["action"]?.ToString();
+    string Ativo(params string[] acoes) => acoes.Contains(atual) ? "active" : "";
+}
+<nav class="list-group mb-4" aria-label="Menu da conta">
+    <a href="/minha-conta" class="list-group-item list-group-item-action @Ativo("Index")">Meus dados</a>
+    <a href="/pedidos" class="list-group-item list-group-item-action">Meus pedidos</a>
+    <a href="/minha-conta/enderecos" class="list-group-item list-group-item-action @Ativo("Enderecos", "EditarEndereco", "NovoEndereco")">Endereços</a>
+    <a href="/minha-conta/privacidade" class="list-group-item list-group-item-action @Ativo("Privacidade")">Privacidade e dados</a>
+</nav>

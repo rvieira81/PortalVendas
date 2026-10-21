@@ -1,0 +1,39 @@
+@{
+    ViewData["Title"] = "Privacidade e dados";
+}
+<div class="row g-4">
+    <div class="col-md-3"><partial name="_MenuConta" /></div>
+    <div class="col-md-9">
+        <h1 class="h3 mb-4">Privacidade e dados</h1>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <h2 class="h5">Baixar meus dados</h2>
+                <p>Arquivo JSON com seus dados de cadastro, endereços e pedidos (LGPD, art. 18).</p>
+                <form method="post" action="/minha-conta/privacidade/exportar" asp-antiforgery="true">
+                    <button class="btn btn-outline-primary">Baixar meus dados</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card border-danger">
+            <div class="card-body">
+                <h2 class="h5 text-danger">Excluir minha conta</h2>
+                <p>Seus dados pessoais (nome, e-mail, CPF, telefone e endereços salvos) são apagados e você não consegue mais entrar.
+                   Os pedidos já feitos ficam guardados sem os seus dados de contato, porque a lei fiscal exige.
+                   Só é possível excluir quando não houver pedidos em andamento.</p>
+                <form method="post" action="/minha-conta/privacidade/excluir-conta" asp-antiforgery="true" data-confirmar="Tem certeza? Esta ação não pode ser desfeita.">
+                    <div class="mb-3" style="max-width: 320px">
+                        <label for="senha" class="form-label">Confirme sua senha</label>
+                        <input id="senha" name="senha" type="password" class="form-control" autocomplete="current-password" required />
+                    </div>
+                    <div class="form-check mb-3">
+                        <input id="confirmo" name="confirmo" type="checkbox" value="true" class="form-check-input" required />
+                        <label for="confirmo" class="form-check-label">Entendo que a exclusão é definitiva</label>
+                    </div>
+                    <button class="btn btn-danger">Excluir minha conta</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

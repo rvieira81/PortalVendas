@@ -1,0 +1,66 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{68040DF9-8590-4192-A3BC-1601462323A5}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{F90FCC72-C8F3-4F56-8F04-13C70A949306}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{C48EDFB8-335B-4E8E-981F-401A801707AE}"
+	ProjectSection(SolutionItems) = preProject
+		Directory.Build.props = Directory.Build.props
+		Directory.Packages.props = Directory.Packages.props
+		README.md = README.md
+		PROJETO.md = PROJETO.md
+		.editorconfig = .editorconfig
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PortalVendas.Domain", "src\PortalVendas.Domain\PortalVendas.Domain.csproj", "{E3EFBDBB-204F-495B-850F-FFD8F1DA286E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PortalVendas.Application", "src\PortalVendas.Application\PortalVendas.Application.csproj", "{444C5433-AC94-4EBB-9D5D-39FAE3E41710}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PortalVendas.Infrastructure", "src\PortalVendas.Infrastructure\PortalVendas.Infrastructure.csproj", "{5A549E6F-9B46-4124-B904-1396738C3FC1}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PortalVendas.Web", "src\PortalVendas.Web\PortalVendas.Web.csproj", "{7348268C-1705-4AD8-ADB2-56EF87408565}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PortalVendas.Tests", "tests\PortalVendas.Tests\PortalVendas.Tests.csproj", "{BF91546D-9C1B-4B36-8C87-6FD5E267F3AF}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E3EFBDBB-204F-495B-850F-FFD8F1DA286E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E3EFBDBB-204F-495B-850F-FFD8F1DA286E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E3EFBDBB-204F-495B-850F-FFD8F1DA286E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E3EFBDBB-204F-495B-850F-FFD8F1DA286E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{444C5433-AC94-4EBB-9D5D-39FAE3E41710}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{444C5433-AC94-4EBB-9D5D-39FAE3E41710}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{444C5433-AC94-4EBB-9D5D-39FAE3E41710}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{444C5433-AC94-4EBB-9D5D-39FAE3E41710}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5A549E6F-9B46-4124-B904-1396738C3FC1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5A549E6F-9B46-4124-B904-1396738C3FC1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5A549E6F-9B46-4124-B904-1396738C3FC1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5A549E6F-9B46-4124-B904-1396738C3FC1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7348268C-1705-4AD8-ADB2-56EF87408565}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7348268C-1705-4AD8-ADB2-56EF87408565}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7348268C-1705-4AD8-ADB2-56EF87408565}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7348268C-1705-4AD8-ADB2-56EF87408565}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BF91546D-9C1B-4B36-8C87-6FD5E267F3AF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BF91546D-9C1B-4B36-8C87-6FD5E267F3AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BF91546D-9C1B-4B36-8C87-6FD5E267F3AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BF91546D-9C1B-4B36-8C87-6FD5E267F3AF}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{E3EFBDBB-204F-495B-850F-FFD8F1DA286E} = {68040DF9-8590-4192-A3BC-1601462323A5}
+		{444C5433-AC94-4EBB-9D5D-39FAE3E41710} = {68040DF9-8590-4192-A3BC-1601462323A5}
+		{5A549E6F-9B46-4124-B904-1396738C3FC1} = {68040DF9-8590-4192-A3BC-1601462323A5}
+		{7348268C-1705-4AD8-ADB2-56EF87408565} = {68040DF9-8590-4192-A3BC-1601462323A5}
+		{BF91546D-9C1B-4B36-8C87-6FD5E267F3AF} = {F90FCC72-C8F3-4F56-8F04-13C70A949306}
+	EndGlobalSection
+EndGlobal

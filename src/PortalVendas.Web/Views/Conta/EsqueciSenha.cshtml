@@ -1,0 +1,19 @@
+@model EsqueciSenhaViewModel
+@{
+    ViewData["Title"] = "Esqueci minha senha";
+}
+<div class="row justify-content-center">
+    <div class="col-md-7 col-lg-5"><div class="painel painel-form">
+        <h1 class="h3 mb-3">Esqueci minha senha</h1>
+        <p class="text-muted">Informe o e-mail da conta. Vamos enviar um link para você criar uma nova senha.</p>
+        <form method="post" action="/conta/esqueci-senha" asp-antiforgery="true" novalidate>
+            <div class="mb-3">
+                <label asp-for="Email" class="form-label"></label>
+                <input asp-for="Email" class="form-control" autocomplete="email" autofocus />
+                <span asp-validation-for="Email" class="text-danger small"></span>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Enviar link</button>
+        </form>
+    </div>
+</div>
+</div>

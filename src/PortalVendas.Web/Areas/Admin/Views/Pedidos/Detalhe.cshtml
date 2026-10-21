@@ -1,0 +1,158 @@
+@model PedidoAdminDetalhe
+@{
+    var p = Model.Pedido;
+    var c = Model.Cliente;
+    ViewData["Title"] = $"Pedido nº {p.Numero}";
+    var proximos = p.ProximosStatusManuais();
+}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+        <h1 class="h3 mb-0">Pedido nº @p.Numero</h1>
+        <div class="small text-muted">Criado em @Formatacao.DataHora(p.CriadoEm) · versão @p.Versao</div>
+    </div>
+    <span class="badge fs-6 text-bg-@p.Status.CorBootstrap()">@p.Status.Descricao()</span>
+</div>
+
+@if (p.Historico.Any(h => h.Observacao?.StartsWith("ATENÇÃO") == true))
+{
+    <div class="alert alert-danger">Há um alerta no histórico deste pedido (estorno ou contestação). Verifique antes de enviar.</div>
+}
+
+<div class="row g-4">
+    <div class="col-xl-8">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h2 class="h6">Itens</h2>
+                <table class="table table-sm mb-0">
+                    <thead><tr><th>SKU</th><th>Produto</th><th class="text-end">Qtd.</th><th class="text-end">Unitário</th><th class="text-end">Total</th></tr></thead>
+                    <tbody>
+                        @foreach (var i in p.Itens)
+                        {
+                            <tr>
+                                <td class="font-monospace small">@i.Sku</td>
+                                <td><a href="/admin/produtos/editar/@i.ProdutoId">@i.NomeProduto</a></td>
+                                <td class="text-end">@i.Quantidade</td>
+                                <td class="text-end">@Formatacao.Moeda(i.PrecoUnitario)</td>
+                                <td class="text-end">@Formatacao.Moeda(i.Total)</td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot>
+                        <tr><td colspan="4" class="text-end">Subtotal</td><td class="text-end">@Formatacao.Moeda(p.Subtotal)</td></tr>
+                        <tr><td colspan="4" class="text-end">Frete — @p.FreteDescricao (@Formatacao.Prazo(p.FretePrazoDias))</td><td class="text-end">@Formatacao.Moeda(p.ValorFrete)</td></tr>
+                        <tr class="fw-semibold"><td colspan="4" class="text-end">Total</td><td class="text-end">@Formatacao.Moeda(p.Total)</td></tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <h2 class="h6">Pagamentos</h2>
+                @if (p.Pagamentos.Count == 0)
+                {
+                    <p class="small text-muted mb-0">Nenhuma tentativa de pagamento.</p>
+                }
+                else
+                {
+                    <table class="table table-sm small mb-0">
+                        <thead><tr><th>Data</th><th>Meio</th><th>Status</th><th>Detalhe</th><th>Id Mercado Pago</th><th class="text-end">Valor</th></tr></thead>
+                        <tbody>
+                            @foreach (var pg in p.Pagamentos.OrderBy(x => x.CriadoEm))
+                            {
+                                <tr>
+                                    <td>@Formatacao.DataHora(pg.CriadoEm)</td>
+                                    <td>@pg.Metodo.Descricao()@(pg.Metodo == MetodoPagamento.CartaoCredito && pg.Parcelas is not null ? $" {pg.Parcelas}x" : "")</td>
+                                    <td>@pg.Status.Descricao()</td>
+                                    <td>@pg.StatusDetalhe</td>
+                                    <td class="font-monospace">@pg.GatewayId</td>
+                                    <td class="text-end">@Formatacao.Moeda(pg.Valor)</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <h2 class="h6">Histórico (auditoria)</h2>
+                <table class="table table-sm small mb-0">
+                    <thead><tr><th>Data</th><th>De</th><th>Para</th><th>Por</th><th>Observação</th></tr></thead>
+                    <tbody>
+                        @foreach (var h in p.Historico.OrderBy(x => x.CriadoEm))
+                        {
+                            <tr class="@(h.Observacao?.StartsWith("ATENÇÃO") == true ? "table-danger" : "")">
+                                <td class="text-nowrap">@Formatacao.DataHora(h.CriadoEm)</td>
+                                <td>@(h.StatusAnterior?.Descricao() ?? "—")</td>
+                                <td>@h.StatusNovo.Descricao()</td>
+                                <td>@h.Autor</td>
+                                <td>@h.Observacao</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-4">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h2 class="h6">Cliente</h2>
+                <p class="small mb-0">
+                    @c.Nome<br />
+                    @c.Email<br />
+                    CPF @Cpf.Mascarar(c.Cpf) · Tel. @Telefone.Mascarar(c.Telefone)
+                </p>
+            </div>
+        </div>
+        <div class="card mb-4">
+            <div class="card-body">
+                <h2 class="h6">Entregar em</h2>
+                <p class="small mb-0">@p.Entrega.Destinatario<br />@p.Entrega.Resumo</p>
+                @if (p.CodigoRastreio is not null)
+                {
+                    <p class="small mt-2 mb-0">Rastreio: <strong>@p.CodigoRastreio</strong></p>
+                }
+            </div>
+        </div>
+
+        @if (proximos.Count > 0)
+        {
+            <div class="card mb-4 border-primary">
+                <div class="card-body">
+                    <h2 class="h6">Próximo passo</h2>
+                    @foreach (var s in proximos)
+                    {
+                        <form method="post" action="/admin/pedidos/avancarstatus/@p.Id" asp-antiforgery="true" class="mb-2">
+                            <input type="hidden" name="novoStatus" value="@s" />
+                            @if (s == StatusPedido.Enviado)
+                            {
+                                <label for="rastreio" class="form-label small">Código de rastreio</label>
+                                <input id="rastreio" name="codigoRastreio" class="form-control mb-2 text-uppercase" maxlength="50" required />
+                            }
+                            <button class="btn btn-primary w-100">Marcar como "@s.Descricao()"</button>
+                        </form>
+                    }
+                    <p class="small text-muted mb-0">O cliente recebe um e-mail a cada mudança.</p>
+                </div>
+            </div>
+        }
+
+        @if (Pedido.TransicaoPermitida(p.Status, StatusPedido.Cancelado) && p.Status != StatusPedido.PagamentoEmAnalise)
+        {
+            <div class="card border-danger">
+                <div class="card-body">
+                    <h2 class="h6 text-danger">Cancelar pedido</h2>
+                    <form method="post" action="/admin/pedidos/cancelar/@p.Id" asp-antiforgery="true" data-confirmar="Cancelar o pedido? Se estiver pago, o valor será estornado ao cliente.">
+                        <label for="motivo" class="form-label small">Motivo (aparece para o cliente)</label>
+                        <input id="motivo" name="motivo" class="form-control mb-2" maxlength="250" placeholder="Ex.: produto avariado no estoque" />
+                        <button class="btn btn-outline-danger w-100">@(p.EstoqueBaixado ? "Cancelar e estornar" : "Cancelar pedido")</button>
+                    </form>
+                </div>
+            </div>
+        }
+    </div>
+</div>

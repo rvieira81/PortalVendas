@@ -1,0 +1,48 @@
+@model List<Endereco>
+@{
+    ViewData["Title"] = "Endereços";
+}
+<div class="row g-4">
+    <div class="col-md-3"><partial name="_MenuConta" /></div>
+    <div class="col-md-9">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 mb-0">Endereços</h1>
+            <a href="/minha-conta/enderecos/novo" class="btn btn-primary">Novo endereço</a>
+        </div>
+        @if (Model.Count == 0)
+        {
+            <p class="text-muted">Nenhum endereço cadastrado.</p>
+        }
+        <div class="row row-cols-1 row-cols-lg-2 g-3">
+            @foreach (var e in Model)
+            {
+                <div class="col">
+                    <div class="card h-100 @(e.Padrao ? "border-primary" : "")">
+                        <div class="card-body">
+                            <h2 class="h6">
+                                @e.Apelido
+                                @if (e.Padrao)
+                                {
+                                    <span class="badge text-bg-primary ms-1">Padrão</span>
+                                }
+                            </h2>
+                            <p class="small mb-0">@e.Destinatario<br />@e.Resumo</p>
+                        </div>
+                        <div class="card-footer bg-transparent d-flex flex-wrap gap-2">
+                            <a href="/minha-conta/enderecos/@e.Id" class="btn btn-sm btn-outline-secondary">Editar</a>
+                            @if (!e.Padrao)
+                            {
+                                <form method="post" action="/minha-conta/enderecos/@e.Id/padrao" asp-antiforgery="true">
+                                    <button class="btn btn-sm btn-outline-primary">Tornar padrão</button>
+                                </form>
+                            }
+                            <form method="post" action="/minha-conta/enderecos/@e.Id/excluir" asp-antiforgery="true" data-confirmar="Excluir este endereço?">
+                                <button class="btn btn-sm btn-outline-danger">Excluir</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>

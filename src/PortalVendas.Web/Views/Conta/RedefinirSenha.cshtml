@@ -1,0 +1,26 @@
+@model RedefinirSenhaViewModel
+@{
+    ViewData["Title"] = "Nova senha";
+}
+<div class="row justify-content-center">
+    <div class="col-md-7 col-lg-5"><div class="painel painel-form">
+        <h1 class="h3 mb-4">Criar nova senha</h1>
+        <form method="post" action="/conta/redefinir-senha" asp-antiforgery="true" novalidate>
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+            <input type="hidden" asp-for="Token" />
+            <div class="mb-3">
+                <label asp-for="Senha" class="form-label"></label>
+                <input asp-for="Senha" class="form-control" autocomplete="new-password" autofocus />
+                <span asp-validation-for="Senha" class="text-danger small"></span>
+                <div class="form-text">Mínimo de 8 caracteres, com letras e números.</div>
+            </div>
+            <div class="mb-3">
+                <label asp-for="ConfirmarSenha" class="form-label"></label>
+                <input asp-for="ConfirmarSenha" class="form-control" autocomplete="new-password" />
+                <span asp-validation-for="ConfirmarSenha" class="text-danger small"></span>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Salvar nova senha</button>
+        </form>
+    </div>
+</div>
+</div>

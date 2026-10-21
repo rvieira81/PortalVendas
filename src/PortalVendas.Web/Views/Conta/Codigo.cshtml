@@ -1,0 +1,20 @@
+@model CodigoViewModel
+@{
+    ViewData["Title"] = "Verificação em duas etapas";
+}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-4"><div class="painel painel-form">
+        <h1 class="h4 mb-3">Verificação em duas etapas</h1>
+        <p class="text-muted">Abra o aplicativo autenticador no celular e digite o código de 6 dígitos.</p>
+        <form method="post" action="/conta/codigo" asp-antiforgery="true" novalidate>
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+            <div class="mb-3">
+                <label asp-for="Codigo" class="form-label"></label>
+                <input asp-for="Codigo" class="form-control form-control-lg text-center" inputmode="numeric" autocomplete="one-time-code" maxlength="7" autofocus />
+                <span asp-validation-for="Codigo" class="text-danger small"></span>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Verificar</button>
+        </form>
+    </div>
+</div>
+</div>

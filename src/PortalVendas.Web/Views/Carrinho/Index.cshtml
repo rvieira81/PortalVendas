@@ -1,0 +1,75 @@
+@model CarrinhoView?
+@{
+    ViewData["Title"] = "Carrinho";
+}
+@if (Model is null || Model.EstaVazio)
+{
+    <div class="vazio">
+        <h1>Seu carrinho está vazio</h1>
+        <p>Os produtos que você adicionar aparecem aqui, com o subtotal e o caminho para o frete.</p>
+        <a href="/" class="btn btn-comprar btn-lg">Ver produtos</a>
+    </div>
+}
+else
+{
+    <partial name="_Etapas" model="1" />
+    <h1 class="pagina-titulo">Carrinho</h1>
+
+    foreach (var aviso in Model.Avisos)
+    {
+        <div class="alert alert-warning">@aviso</div>
+    }
+
+    <div class="duas-colunas">
+        <section class="painel">
+            <ul class="lista-itens">
+                @foreach (var item in Model.Itens)
+                {
+                    <li class="item @(item.Indisponivel ? "item-indisponivel" : "")">
+                        <a href="/produto/@item.Slug" class="item-foto">
+                            <img src="@Formatacao.UrlImagem(item.Imagem)" alt="" width="88" height="88" />
+                        </a>
+                        <div class="item-corpo">
+                            <a href="/produto/@item.Slug" class="item-nome">@item.Nome</a>
+                            <span class="item-unitario">@Formatacao.Moeda(item.PrecoAtual) cada</span>
+                            <div class="item-acoes">
+                                <form method="post" action="/carrinho/alterar" asp-antiforgery="true">
+                                    <input type="hidden" name="produtoId" value="@item.ProdutoId" />
+                                    <label class="visually-hidden" for="qtd-@item.ProdutoId">Quantidade de @item.Nome</label>
+                                    <select id="qtd-@item.ProdutoId" name="quantidade" class="form-select form-select-sm" data-enviar-ao-mudar>
+                                        @for (var q = 1; q <= Math.Max(item.QuantidadeMaxima, item.Quantidade); q++)
+                                        {
+                                            <option value="@q" selected="@(q == item.Quantidade)">@q</option>
+                                        }
+                                    </select>
+                                    <noscript><button class="btn btn-sm btn-outline-secondary">Atualizar</button></noscript>
+                                </form>
+                                <form method="post" action="/carrinho/remover" asp-antiforgery="true">
+                                    <input type="hidden" name="produtoId" value="@item.ProdutoId" />
+                                    <button type="submit" class="link-remover">Remover</button>
+                                </form>
+                            </div>
+                        </div>
+                        <strong class="item-total">@Formatacao.Moeda(item.Total)</strong>
+                    </li>
+                }
+            </ul>
+            <a href="/" class="link-voltar">Continuar comprando</a>
+        </section>
+
+        <aside class="painel resumo">
+            <h2>Resumo</h2>
+            <div class="resumo-linha"><span>Produtos (@Model.QuantidadeTotal)</span><span>@Formatacao.Moeda(Model.Subtotal)</span></div>
+            <div class="resumo-linha resumo-suave"><span>Frete</span><span>na próxima etapa</span></div>
+            <div class="resumo-total"><span>Subtotal</span><span>@Formatacao.Moeda(Model.Subtotal)</span></div>
+            @if (Model.PodeFinalizar)
+            {
+                <a href="/checkout" class="btn btn-comprar btn-lg w-100">Continuar para a entrega</a>
+            }
+            else
+            {
+                <button class="btn btn-comprar btn-lg w-100" disabled>Ajuste os itens para continuar</button>
+            }
+        </aside>
+    </div>
+}

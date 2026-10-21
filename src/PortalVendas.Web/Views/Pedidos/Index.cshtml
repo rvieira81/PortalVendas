@@ -1,0 +1,42 @@
+@model MeusPedidosViewModel
+@{
+    ViewData["Title"] = "Meus pedidos";
+}
+<h1 class="h3 mb-4">Meus pedidos</h1>
+@if (Model.Pedidos.Itens.Count == 0)
+{
+    <div class="text-center text-muted py-5">
+        <p class="lead">Você ainda não fez pedidos.</p>
+        <a href="/" class="btn btn-primary">Ir para a loja</a>
+    </div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr><th scope="col">Pedido</th><th scope="col">Data</th><th scope="col">Itens</th><th scope="col">Total</th><th scope="col">Status</th><th></th></tr>
+            </thead>
+            <tbody>
+                @foreach (var p in Model.Pedidos.Itens)
+                {
+                    <tr>
+                        <td>nº @p.Numero</td>
+                        <td>@Formatacao.DataHora(p.CriadoEm)</td>
+                        <td>@p.QuantidadeItens</td>
+                        <td>@Formatacao.Moeda(p.Total)</td>
+                        <td><span class="badge text-bg-@p.Status.CorBootstrap()">@p.Status.Descricao()</span></td>
+                        <td class="text-end">
+                            @if (p.Status == StatusPedido.AguardandoPagamento)
+                            {
+                                <a href="/pedidos/@p.Id/pagamento" class="btn btn-sm btn-primary">Pagar</a>
+                            }
+                            <a href="/pedidos/@p.Id" class="btn btn-sm btn-outline-secondary">Detalhes</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <partial name="_Paginacao" model='new Paginacao(Model.Pedidos.PaginaAtual, Model.Pedidos.TotalPaginas, "/pedidos")' />
+}

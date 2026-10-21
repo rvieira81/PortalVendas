@@ -1,0 +1,146 @@
+@model ProdutoEdicaoViewModel
+@{
+    ViewData["Title"] = Model.Id == 0 ? "Novo produto" : Model.Nome;
+}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <h1 class="h3 mb-0">@(Model.Id == 0 ? "Novo produto" : "Editar produto")</h1>
+    <div class="d-flex gap-2">
+        @if (Model.Id > 0 && Model.Ativo && !string.IsNullOrEmpty(Model.Slug))
+        {
+            <a href="/produto/@Model.Slug" target="_blank" class="btn btn-outline-secondary">Ver na loja</a>
+        }
+        <a href="/admin/produtos" class="btn btn-outline-secondary">Voltar</a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-xl-8">
+        <form method="post" action="/admin/produtos/salvar" asp-antiforgery="true" class="card" novalidate>
+            <div class="card-body">
+                <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
+                <input type="hidden" asp-for="Id" />
+                <div class="row g-3">
+                    <div class="col-md-8">
+                        <label asp-for="Nome" class="form-label"></label>
+                        <input asp-for="Nome" class="form-control" />
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="Sku" class="form-label"></label>
+                        <input asp-for="Sku" class="form-control text-uppercase" />
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="CategoriaId" class="form-label"></label>
+                        <select asp-for="CategoriaId" class="form-select">
+                            <option value="">Escolha…</option>
+                            @foreach (var c in Model.Categorias)
+                            {
+                                <option value="@c.Id">@(c.Nome + (c.Ativa ? "" : " (inativa)"))</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-6 d-flex align-items-end">
+                        <div class="form-check">
+                            <input asp-for="Ativo" class="form-check-input" />
+                            <label asp-for="Ativo" class="form-check-label"></label>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <label asp-for="Descricao" class="form-label"></label>
+                        <textarea asp-for="Descricao" class="form-control" rows="6"></textarea>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="Preco" class="form-label"></label>
+                        <input asp-for="Preco" class="form-control" inputmode="decimal" placeholder="0,00" />
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="PrecoDe" class="form-label"></label>
+                        <input asp-for="PrecoDe" class="form-control" inputmode="decimal" placeholder="opcional" />
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="Estoque" class="form-label"></label>
+                        <input asp-for="Estoque" class="form-control" type="number" min="0" step="1" />
+                        @if (Model.EstoqueReservado > 0)
+                        {
+                            <div class="form-text">@Model.EstoqueReservado reservada(s) em pedidos aguardando pagamento.</div>
+                        }
+                    </div>
+                </div>
+
+                <h2 class="h6 mt-4">Embalagem (para o cálculo do frete)</h2>
+                <p class="small text-muted">Medidas e peso do produto já embalado, como vai para a transportadora.</p>
+                <div class="row g-3">
+                    <div class="col-6 col-md-3">
+                        <label asp-for="PesoKg" class="form-label"></label>
+                        <input asp-for="PesoKg" class="form-control" inputmode="decimal" placeholder="0,350" />
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <label asp-for="AlturaCm" class="form-label"></label>
+                        <input asp-for="AlturaCm" class="form-control" inputmode="decimal" />
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <label asp-for="LarguraCm" class="form-label"></label>
+                        <input asp-for="LarguraCm" class="form-control" inputmode="decimal" />
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <label asp-for="ComprimentoCm" class="form-label"></label>
+                        <input asp-for="ComprimentoCm" class="form-control" inputmode="decimal" />
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer d-flex justify-content-between">
+                <button type="submit" class="btn btn-primary">Salvar</button>
+            </div>
+        </form>
+        @if (Model.Id > 0)
+        {
+            <form method="post" action="/admin/produtos/excluir/@Model.Id" asp-antiforgery="true" class="mt-3"
+                  data-confirmar="Excluir este produto? Se ele já teve vendas, será apenas desativado.">
+                <button type="submit" class="btn btn-outline-danger btn-sm">Excluir produto</button>
+            </form>
+        }
+    </div>
+
+    <div class="col-xl-4">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="h6">Fotos</h2>
+                @if (Model.Id == 0)
+                {
+                    <p class="small text-muted mb-0">Salve o produto para adicionar fotos.</p>
+                }
+                else
+                {
+                    <div class="row row-cols-3 g-2 mb-3">
+                        @for (var i = 0; i < Model.Imagens.Count; i++)
+                        {
+                            var img = Model.Imagens[i];
+                            <div class="col">
+                                <div class="border rounded p-1 text-center @(i == 0 ? "border-primary" : "")">
+                                    <img src="@Formatacao.UrlImagem(img.Arquivo)" alt="Foto @(i + 1)" class="img-fluid object-fit-contain" style="height: 80px" />
+                                    <div class="d-flex justify-content-center gap-1 mt-1">
+                                        @if (i > 0)
+                                        {
+                                            <form method="post" action="/admin/produtos/imagemprincipal/@Model.Id" asp-antiforgery="true">
+                                                <input type="hidden" name="imagemId" value="@img.Id" />
+                                                <button class="btn btn-link btn-sm p-0" title="Usar como foto principal">Principal</button>
+                                            </form>
+                                        }
+                                        <form method="post" action="/admin/produtos/removerimagem/@Model.Id" asp-antiforgery="true" data-confirmar="Remover esta foto?">
+                                            <input type="hidden" name="imagemId" value="@img.Id" />
+                                            <button class="btn btn-link btn-sm p-0 text-danger">Remover</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <form method="post" action="/admin/produtos/adicionarimagem/@Model.Id" asp-antiforgery="true" enctype="multipart/form-data">
+                        <label for="arquivo" class="form-label small">Adicionar foto (JPG, PNG ou WebP, até 2 MB)</label>
+                        <input id="arquivo" name="arquivo" type="file" class="form-control form-control-sm mb-2" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" required />
+                        <button class="btn btn-sm btn-outline-primary">Enviar</button>
+                    </form>
+                }
+            </div>
+        </div>
+    </div>
+</div>

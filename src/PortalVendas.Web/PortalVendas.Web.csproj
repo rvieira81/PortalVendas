@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <!-- IIS: hospedagem in-process (ASP.NET Core Module V2) -->
+    <AspNetCoreHostingModel>InProcess</AspNetCoreHostingModel>
+    <UserSecretsId>portalvendas-web-7d3f2c1a</UserSecretsId>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\PortalVendas.Infrastructure\PortalVendas.Infrastructure.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Serilog.AspNetCore" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="PortalVendas.Tests" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Exemplo de configuração de produção: fica no repositório, não vai para o servidor -->
+    <Content Update="appsettings.Production.exemplo.json" CopyToPublishDirectory="Never" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Pastas de dados locais não vão para a publicação -->
+    <Content Remove="logs\**;emails-dev\**;imagens\**;keys\**" />
+    <None Remove="logs\**;emails-dev\**;imagens\**;keys\**" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,14 @@
+@model int
+@{
+    var etapas = new[] { "Carrinho", "Entrega", "Pagamento" };
+}
+<ol class="etapas" aria-label="Etapas da compra">
+    @for (var i = 0; i < etapas.Length; i++)
+    {
+        var numero = i + 1;
+        var estado = numero < Model ? "feita" : numero == Model ? "atual" : "";
+        <li class="@estado" aria-current="@(numero == Model ? "step" : null)">
+            <span class="etapa-numero">@numero</span>@etapas[i]
+        </li>
+    }
+</ol>

@@ -1,0 +1,77 @@
+@model EnderecoViewModel
+@{
+    ViewData["Title"] = Model.Id == 0 ? "Novo endereço" : "Editar endereço";
+}
+<div class="row g-4">
+    <div class="col-md-3"><partial name="_MenuConta" /></div>
+    <div class="col-md-9">
+        <h1 class="h3 mb-4">@ViewData["Title"]</h1>
+        <form method="post" action="/minha-conta/enderecos/salvar" asp-antiforgery="true" novalidate data-endereco>
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="RetornarPara" />
+            <div class="row g-3">
+                <div class="col-sm-4">
+                    <label asp-for="Cep" class="form-label"></label>
+                    <input asp-for="Cep" class="form-control" inputmode="numeric" data-mascara="cep" maxlength="9" data-cep autocomplete="postal-code" />
+                    <span asp-validation-for="Cep" class="text-danger small"></span>
+                    <div class="form-text" data-cep-status aria-live="polite"><a href="https://buscacepinter.correios.com.br/" target="_blank" rel="noopener">Não sei meu CEP</a></div>
+                </div>
+                <div class="col-sm-8">
+                    <label asp-for="Apelido" class="form-label"></label>
+                    <input asp-for="Apelido" class="form-control" placeholder="Casa" />
+                </div>
+                <div class="col-sm-9">
+                    <label asp-for="Logradouro" class="form-label"></label>
+                    <input asp-for="Logradouro" class="form-control" data-campo-cep="logradouro" autocomplete="address-line1" />
+                    <span asp-validation-for="Logradouro" class="text-danger small"></span>
+                </div>
+                <div class="col-sm-3">
+                    <label asp-for="Numero" class="form-label"></label>
+                    <input asp-for="Numero" class="form-control" />
+                    <span asp-validation-for="Numero" class="text-danger small"></span>
+                </div>
+                <div class="col-sm-6">
+                    <label asp-for="Complemento" class="form-label"></label>
+                    <input asp-for="Complemento" class="form-control" placeholder="Apto, bloco, referência" autocomplete="address-line2" />
+                </div>
+                <div class="col-sm-6">
+                    <label asp-for="Bairro" class="form-label"></label>
+                    <input asp-for="Bairro" class="form-control" data-campo-cep="bairro" />
+                    <span asp-validation-for="Bairro" class="text-danger small"></span>
+                </div>
+                <div class="col-sm-9">
+                    <label asp-for="Cidade" class="form-label"></label>
+                    <input asp-for="Cidade" class="form-control" data-campo-cep="cidade" autocomplete="address-level2" />
+                    <span asp-validation-for="Cidade" class="text-danger small"></span>
+                </div>
+                <div class="col-sm-3">
+                    <label asp-for="Uf" class="form-label"></label>
+                    <select asp-for="Uf" class="form-select" data-campo-cep="uf">
+                        <option value="">—</option>
+                        @foreach (var uf in Uf.Validas.OrderBy(u => u))
+                        {
+                            <option value="@uf">@uf</option>
+                        }
+                    </select>
+                    <span asp-validation-for="Uf" class="text-danger small"></span>
+                </div>
+                <div class="col-12">
+                    <label asp-for="Destinatario" class="form-label"></label>
+                    <input asp-for="Destinatario" class="form-control" autocomplete="name" />
+                    <span asp-validation-for="Destinatario" class="text-danger small"></span>
+                </div>
+                <div class="col-12">
+                    <div class="form-check">
+                        <input asp-for="Padrao" class="form-check-input" />
+                        <label asp-for="Padrao" class="form-check-label"></label>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-4 d-flex gap-2">
+                <button type="submit" class="btn btn-primary">Salvar endereço</button>
+                <a href="@(string.IsNullOrEmpty(Model.RetornarPara) ? "/minha-conta/enderecos" : Model.RetornarPara)" class="btn btn-outline-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>

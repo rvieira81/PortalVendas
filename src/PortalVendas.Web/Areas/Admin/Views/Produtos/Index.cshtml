@@ -1,0 +1,51 @@
+@model ProdutosIndexViewModel
+@{
+    ViewData["Title"] = "Produtos";
+    var urlBase = "/admin/produtos?termo=" + Uri.EscapeDataString(Model.Termo ?? "") + "&categoriaId=" + Model.CategoriaId;
+}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <h1 class="h3 mb-0">Produtos <small class="text-muted fs-6">(@Model.Produtos.TotalItens)</small></h1>
+    <a href="/admin/produtos/novo" class="btn btn-primary">Novo produto</a>
+</div>
+
+<form method="get" class="row g-2 mb-3">
+    <div class="col-md-5">
+        <label for="termo" class="visually-hidden">Buscar</label>
+        <input id="termo" name="termo" class="form-control" placeholder="Nome ou SKU" value="@Model.Termo" />
+    </div>
+    <div class="col-md-4">
+        <label for="categoriaId" class="visually-hidden">Categoria</label>
+        <select id="categoriaId" name="categoriaId" class="form-select">
+            <option value="">Todas as categorias</option>
+            @foreach (var c in Model.Categorias)
+            {
+                <option value="@c.Id" selected="@(c.Id == Model.CategoriaId)">@c.Nome</option>
+            }
+        </select>
+    </div>
+    <div class="col-md-3"><button class="btn btn-outline-primary w-100">Filtrar</button></div>
+</form>
+
+<div class="table-responsive bg-white rounded border">
+    <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+            <tr><th></th><th>SKU</th><th>Nome</th><th>Categoria</th><th class="text-end">Preço</th><th class="text-end">Estoque</th><th class="text-end">Reservado</th><th>Situação</th></tr>
+        </thead>
+        <tbody>
+            @foreach (var p in Model.Produtos.Itens)
+            {
+                <tr>
+                    <td><img src="@Formatacao.UrlImagem(p.Imagem)" alt="" width="40" height="40" class="object-fit-contain bg-light rounded" /></td>
+                    <td class="font-monospace small">@p.Sku</td>
+                    <td><a href="/admin/produtos/editar/@p.Id">@p.Nome</a></td>
+                    <td>@p.Categoria</td>
+                    <td class="text-end">@Formatacao.Moeda(p.Preco)</td>
+                    <td class="text-end @(p.Estoque - p.Reservado <= 0 ? "text-danger fw-semibold" : "")">@p.Estoque</td>
+                    <td class="text-end">@p.Reservado</td>
+                    <td>@(p.Ativo ? "Ativo" : "Inativo")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+<partial name="_Paginacao" model="new Paginacao(Model.Produtos.PaginaAtual, Model.Produtos.TotalPaginas, urlBase)" />

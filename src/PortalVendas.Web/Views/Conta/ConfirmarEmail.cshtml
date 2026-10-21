@@ -1,0 +1,18 @@
+@model PortalVendas.Application.Comum.Resultado
+@{
+    ViewData["Title"] = "Confirmação de e-mail";
+}
+<div class="text-center py-5 mx-auto" style="max-width: 560px">
+    @if (Model.Sucesso)
+    {
+        <h1 class="h3">E-mail confirmado!</h1>
+        <p class="lead">Sua conta está pronta para comprar.</p>
+        <a href="/" class="btn btn-primary">Ir para a loja</a>
+    }
+    else
+    {
+        <h1 class="h3">Não foi possível confirmar</h1>
+        <p class="lead">@Model.Erro</p>
+        <a href="/minha-conta" class="btn btn-primary">Minha conta</a>
+    }
+</div>

@@ -1,0 +1,10 @@
+@model string
+@{
+    ViewData["Title"] = "Confirme seu e-mail";
+}
+<div class="text-center py-5 mx-auto" style="max-width: 560px">
+    <h1 class="h3">Confirme seu e-mail</h1>
+    <p class="lead">Se os dados estiverem corretos, enviamos um link de confirmação para <strong>@Model</strong>.</p>
+    <p class="text-muted">Abra o e-mail e clique no link para ativar a conta. Confira também a caixa de spam.</p>
+    <a href="/conta/entrar" class="btn btn-primary">Ir para o login</a>
+</div>

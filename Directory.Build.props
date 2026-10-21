@@ -1,0 +1,15 @@
+<Project>
+  <!-- Configuração comum a todos os projetos. Para usar .NET 8, troque net10.0 por net8.0
+       e as versões 10.0.x por 8.0.x em Directory.Packages.props (ver docs/adr/002-dotnet-10.md). -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <Authors>PortalVendas</Authors>
+    <Company>PortalVendas</Company>
+    <NeutralLanguage>pt-BR</NeutralLanguage>
+    <!-- CS1591: comentários XML ausentes em membros públicos -->
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+</Project>

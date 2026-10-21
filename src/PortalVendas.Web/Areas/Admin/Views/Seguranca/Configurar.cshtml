@@ -1,0 +1,31 @@
+@model ConfigurarMfaViewModel
+@{
+    ViewData["Title"] = "Configurar verificação em duas etapas";
+}
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-body">
+                <h1 class="h4">Configurar verificação em duas etapas</h1>
+                <p>O painel administrativo exige um código do celular além da senha. Configure uma vez:</p>
+                <ol>
+                    <li>Instale um aplicativo autenticador (Google Authenticator, Microsoft Authenticator, Authy ou outro).</li>
+                    <li>No aplicativo, escolha <strong>adicionar conta → inserir chave de configuração</strong> e digite a chave abaixo
+                        (tipo: baseada em tempo). No celular, você também pode tocar em <a href="@Model.UriOtpAuth">abrir no aplicativo</a>.</li>
+                    <li>Digite o código de 6 dígitos que o aplicativo mostrar.</li>
+                </ol>
+                <div class="bg-light border rounded p-3 text-center mb-3">
+                    <div class="small text-muted">Chave de configuração</div>
+                    <div class="fs-5 font-monospace user-select-all">@Model.SegredoFormatado</div>
+                </div>
+                <form method="post" action="/admin/seguranca/configurar" asp-antiforgery="true" novalidate>
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                    <label for="codigo" class="form-label">Código do aplicativo</label>
+                    <input id="codigo" name="codigo" class="form-control form-control-lg text-center mb-3" inputmode="numeric" autocomplete="one-time-code" maxlength="7" required autofocus />
+                    <button class="btn btn-primary w-100">Ativar e entrar no painel</button>
+                </form>
+                <p class="small text-muted mt-3 mb-0">Guarde a chave em local seguro: se perder o celular, outro administrador precisa redefinir o acesso no banco (ver docs/06-implantacao.md).</p>
+            </div>
+        </div>
+    </div>
+</div>

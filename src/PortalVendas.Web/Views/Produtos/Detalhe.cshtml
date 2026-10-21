@@ -1,0 +1,106 @@
+@model ProdutoDetalhe
+@{
+    ViewData["Title"] = Model.Nome;
+    ViewData["Descricao"] = Model.Descricao.Length > 150 ? Model.Descricao[..150] : Model.Descricao;
+    var parcelas = Math.Clamp((int)Math.Floor(Model.Preco / 10m), 1, 12);
+}
+<nav aria-label="Você está em" class="trilha">
+    <a href="/">Início</a>
+    <span aria-hidden="true">/</span>
+    <a href="/categoria/@Model.Categoria.Slug">@Model.Categoria.Nome</a>
+</nav>
+
+<div class="produto-pagina">
+    <div class="produto-galeria">
+        @if (Model.Imagens.Count == 0)
+        {
+            <div class="galeria-principal"><img src="@Formatacao.UrlImagem(null)" alt="" /></div>
+        }
+        else
+        {
+            <div class="galeria-principal">
+                <img id="foto-principal" src="@Formatacao.UrlImagem(Model.Imagens[0])" alt="@Model.Nome" />
+            </div>
+            if (Model.Imagens.Count > 1)
+            {
+                <div class="galeria-miniaturas" role="list">
+                    @for (var i = 0; i < Model.Imagens.Count; i++)
+                    {
+                        <button type="button" role="listitem" class="miniatura @(i == 0 ? "ativa" : "")"
+                                data-foto="@Formatacao.UrlImagem(Model.Imagens[i])" aria-label="Ver foto @(i + 1)">
+                            <img src="@Formatacao.UrlImagem(Model.Imagens[i])" alt="" />
+                        </button>
+                    }
+                </div>
+            }
+        }
+    </div>
+
+    <div class="produto-info">
+        <h1>@Model.Nome</h1>
+
+        <div class="produto-preco-bloco">
+            @if (Model.PrecoDe is not null)
+            {
+                <s class="preco-de">de @Formatacao.Moeda(Model.PrecoDe.Value)</s>
+            }
+            <span class="etiqueta etiqueta-grande">@Formatacao.Moeda(Model.Preco)</span>
+            <p class="parcelas">
+                @if (parcelas > 1)
+                {
+                    <text>ou em até @(parcelas)x de @Formatacao.Moeda(Model.Preco / parcelas) no cartão</text>
+                }
+                else
+                {
+                    <text>à vista no Pix, cartão ou boleto</text>
+                }
+            </p>
+        </div>
+
+        @if (Model.Esgotado)
+        {
+            <div class="aviso-esgotado">
+                <strong>Produto esgotado.</strong> Volte em breve ou veja outros produtos de <a href="/categoria/@Model.Categoria.Slug">@Model.Categoria.Nome</a>.
+            </div>
+        }
+        else
+        {
+            <form method="post" action="/carrinho/adicionar" asp-antiforgery="true" class="comprar">
+                <input type="hidden" name="produtoId" value="@Model.Id" />
+                <div class="quantidade">
+                    <label for="quantidade">Quantidade</label>
+                    <select id="quantidade" name="quantidade" class="form-select">
+                        @for (var q = 1; q <= Model.QuantidadeMaximaCompra; q++)
+                        {
+                            <option value="@q">@q</option>
+                        }
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-comprar btn-lg">Adicionar ao carrinho</button>
+            </form>
+            if (Model.Disponivel <= 5)
+            {
+                <p class="poucas-unidades">Restam só @Model.Disponivel @(Model.Disponivel == 1 ? "unidade" : "unidades").</p>
+            }
+        }
+
+        <ul class="produto-fatos">
+            <li><strong>Frete</strong> calculado pelo seu CEP no fechamento do pedido, com o prazo de cada transportadora.</li>
+            <li><strong>Pagamento</strong> por Pix, cartão de crédito ou boleto, processado pelo Mercado Pago.</li>
+            <li><strong>Cancelamento</strong> pelo próprio site enquanto o pedido não foi enviado.</li>
+        </ul>
+
+        <section class="produto-descricao">
+            <h2>Sobre o produto</h2>
+            <div class="texto-descricao">@Model.Descricao</div>
+            <dl class="medidas">
+                <dt>Embalagem</dt>
+                <dd>@Formatacao.Numero(Model.AlturaCm, 0) × @Formatacao.Numero(Model.LarguraCm, 0) × @Formatacao.Numero(Model.ComprimentoCm, 0) cm</dd>
+                <dt>Peso</dt>
+                <dd>@Formatacao.Numero(Model.PesoKg, 2) kg</dd>
+                <dt>Código</dt>
+                <dd>@Model.Sku</dd>
+            </dl>
+        </section>
+    </div>
+</div>

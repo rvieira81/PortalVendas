@@ -1,0 +1,111 @@
+@model Pedido
+@{
+    ViewData["Title"] = $"Pedido nº {Model.Numero}";
+    var aprovado = Model.Pagamentos.FirstOrDefault(p => p.Status == StatusPagamento.Aprovado);
+    var prazoPagamento = Model.ExpiraEm is null ? "" : $" até {Formatacao.DataHora(Model.ExpiraEm)}";
+}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <div>
+        <h1 class="h3 mb-1">Pedido nº @Model.Numero</h1>
+        <div class="text-muted small">Feito em @Formatacao.DataHora(Model.CriadoEm)</div>
+    </div>
+    <span class="badge fs-6 text-bg-@Model.Status.CorBootstrap()">@Model.Status.Descricao()</span>
+</div>
+
+@if (Model.Status == StatusPedido.AguardandoPagamento)
+{
+    <div class="alert alert-warning d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <span>@($"Aguardando pagamento{prazoPagamento}.") Os produtos estão reservados para você.</span>
+        <a href="/pedidos/@Model.Id/pagamento" class="btn btn-warning">Pagar agora</a>
+    </div>
+}
+@if (Model.Status == StatusPedido.PagamentoEmAnalise)
+{
+    <div class="alert alert-info">O pagamento está em análise pela operadora do cartão. Avisaremos por e-mail assim que houver resposta.</div>
+}
+@if (Model.CodigoRastreio is not null)
+{
+    <div class="alert alert-success">
+        Código de rastreio: <strong>@Model.CodigoRastreio</strong>
+        — <a href="https://rastreamento.correios.com.br/app/index.php" target="_blank" rel="noopener">rastrear nos Correios</a>
+        ou no site da transportadora (@Model.FreteDescricao).
+    </div>
+}
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h2 class="h5">Itens</h2>
+                <table class="table table-sm mb-0">
+                    <tbody>
+                        @foreach (var i in Model.Itens)
+                        {
+                            <tr>
+                                <td>@i.Quantidade× @i.NomeProduto <span class="small text-muted">(@Formatacao.Moeda(i.PrecoUnitario) cada)</span></td>
+                                <td class="text-end">@Formatacao.Moeda(i.Total)</td>
+                            </tr>
+                        }
+                        <tr><td>Frete — @Model.FreteDescricao (até @Formatacao.Prazo(Model.FretePrazoDias))</td><td class="text-end">@Formatacao.Moeda(Model.ValorFrete)</td></tr>
+                        @if (Model.Desconto > 0)
+                        {
+                            <tr><td>Desconto</td><td class="text-end">− @Formatacao.Moeda(Model.Desconto)</td></tr>
+                        }
+                        <tr class="fw-semibold"><td>Total</td><td class="text-end">@Formatacao.Moeda(Model.Total)</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <h2 class="h5">Acompanhamento</h2>
+                <ol class="list-unstyled mb-0">
+                    @foreach (var h in Model.Historico.OrderBy(h => h.CriadoEm))
+                    {
+                        <li class="mb-2">
+                            <span class="small text-muted">@Formatacao.DataHora(h.CriadoEm)</span> —
+                            <strong>@h.StatusNovo.Descricao()</strong>
+                            @if (!string.IsNullOrEmpty(h.Observacao) && !h.Observacao.StartsWith("ATENÇÃO"))
+                            {
+                                <span class="small">(@h.Observacao)</span>
+                            }
+                        </li>
+                    }
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h2 class="h6">Entrega</h2>
+                <p class="small mb-0">@Model.Entrega.Destinatario<br />@Model.Entrega.Resumo</p>
+            </div>
+        </div>
+        @if (aprovado is not null)
+        {
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h2 class="h6">Pagamento</h2>
+                    <p class="small mb-0">
+                        @aprovado.Metodo.Descricao()
+                        @if (aprovado.Metodo == MetodoPagamento.CartaoCredito)
+                        {
+                            <span>— @aprovado.Bandeira final @aprovado.UltimosDigitos em @(aprovado.Parcelas)x</span>
+                        }
+                        <br />Aprovado em @Formatacao.DataHora(Model.PagoEm)
+                    </p>
+                </div>
+            </div>
+        }
+        @if (Model.PodeSerCanceladoPeloCliente)
+        {
+            <form method="post" action="/pedidos/@Model.Id/cancelar" asp-antiforgery="true"
+                  data-confirmar="Cancelar este pedido?@(aprovado is null ? "" : " O valor pago será estornado.")">
+                <button type="submit" class="btn btn-outline-danger w-100">Cancelar pedido</button>
+            </form>
+        }
+    </div>
+</div>

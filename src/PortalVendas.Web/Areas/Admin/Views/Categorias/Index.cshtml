@@ -1,0 +1,50 @@
+@model List<CategoriaAdminResumo>
+@{
+    ViewData["Title"] = "Categorias";
+}
+<h1 class="h3 mb-3">Categorias</h1>
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="table-responsive bg-white rounded border">
+            <table class="table align-middle mb-0">
+                <thead class="table-light"><tr><th colspan="5">Nome, endereço na loja, produtos e situação</th></tr></thead>
+                <tbody>
+                    @foreach (var c in Model)
+                    {
+                        <tr>
+                            <td colspan="5" class="p-0">
+                                <form method="post" action="/admin/categorias/salvar" asp-antiforgery="true" class="d-flex flex-wrap align-items-center gap-2 p-2">
+                                    <input type="hidden" name="id" value="@c.Id" />
+                                    <label class="visually-hidden" for="nome-@c.Id">Nome</label>
+                                    <input id="nome-@c.Id" name="nome" value="@c.Nome" class="form-control form-control-sm" style="max-width: 220px" maxlength="100" />
+                                    <code class="small">/categoria/@c.Slug</code>
+                                    <span class="small text-muted ms-auto">@c.Produtos produto(s)</span>
+                                    <div class="form-check form-switch mb-0">
+                                        <input id="ativa-@c.Id" name="ativa" type="checkbox" value="true" class="form-check-input" checked="@c.Ativa" />
+                                        <input type="hidden" name="ativa" value="false" />
+                                        <label for="ativa-@c.Id" class="form-check-label small">Ativa</label>
+                                    </div>
+                                    <button class="btn btn-sm btn-outline-primary">Salvar</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="h6">Nova categoria</h2>
+                <form method="post" action="/admin/categorias/salvar" asp-antiforgery="true">
+                    <input type="hidden" name="id" value="0" />
+                    <input type="hidden" name="ativa" value="true" />
+                    <label for="nova" class="form-label small">Nome</label>
+                    <input id="nova" name="nome" class="form-control mb-2" maxlength="100" required />
+                    <button class="btn btn-primary">Criar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,79 @@
+@model PainelVendas
+@{
+    ViewData["Title"] = "Painel";
+    var maximo = Model.PorDia.Count == 0 ? 0 : Model.PorDia.Max(d => d.Valor);
+}
+<div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
+    <h1 class="h3 mb-0">Painel de vendas</h1>
+    <form method="get" class="d-flex gap-2 align-items-end">
+        <div>
+            <label for="de" class="form-label small mb-0">De</label>
+            <input id="de" name="de" type="date" class="form-control form-control-sm" value="@Model.De.ToString("yyyy-MM-dd")" />
+        </div>
+        <div>
+            <label for="ate" class="form-label small mb-0">Até</label>
+            <input id="ate" name="ate" type="date" class="form-control form-control-sm" value="@Model.Ate.ToString("yyyy-MM-dd")" />
+        </div>
+        <button class="btn btn-sm btn-primary">Aplicar</button>
+    </form>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3"><div class="card h-100"><div class="card-body">
+        <div class="small text-muted">Faturamento</div>
+        <div class="fs-4 fw-semibold">@Formatacao.Moeda(Model.Faturamento)</div>
+    </div></div></div>
+    <div class="col-6 col-lg-3"><div class="card h-100"><div class="card-body">
+        <div class="small text-muted">Pedidos pagos</div>
+        <div class="fs-4 fw-semibold">@Model.PedidosPagos</div>
+    </div></div></div>
+    <div class="col-6 col-lg-3"><div class="card h-100"><div class="card-body">
+        <div class="small text-muted">Ticket médio</div>
+        <div class="fs-4 fw-semibold">@Formatacao.Moeda(Model.TicketMedio)</div>
+    </div></div></div>
+    <div class="col-6 col-lg-3"><div class="card h-100"><div class="card-body">
+        <div class="small text-muted">Precisam de ação</div>
+        <div class="small">
+            <a href="/admin/pedidos?status=@StatusPedido.Pago">@Model.ParaSeparar para separar</a><br />
+            <a href="/admin/pedidos?status=@StatusPedido.EmSeparacao">@Model.ParaEnviar para enviar</a><br />
+            <a href="/admin/pedidos?status=@StatusPedido.AguardandoPagamento">@Model.AguardandoPagamento aguardando pagamento</a>
+        </div>
+    </div></div></div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-8">
+        <div class="card h-100">
+            <div class="card-body">
+                <h2 class="h6">Faturamento por dia</h2>
+                <div class="grafico-barras" role="img" aria-label="Faturamento diário de @Model.De.ToString("dd/MM") a @Model.Ate.ToString("dd/MM")">
+                    @foreach (var (dia, valor) in Model.PorDia)
+                    {
+                        var altura = maximo == 0 ? 0 : (int)Math.Round(valor / maximo * 100);
+                        <div class="barra" style="height: @(Math.Max(altura, 1))%" title="@dia.ToString("dd/MM"): @Formatacao.Moeda(valor)"></div>
+                    }
+                </div>
+                <div class="d-flex justify-content-between small text-muted mt-1">
+                    <span>@Model.De.ToString("dd/MM")</span><span>@Model.Ate.ToString("dd/MM")</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h2 class="h6">Mais vendidos no período</h2>
+                @if (Model.MaisVendidos.Count == 0)
+                {
+                    <p class="small text-muted mb-0">Sem vendas no período.</p>
+                }
+                <ol class="small mb-0">
+                    @foreach (var p in Model.MaisVendidos)
+                    {
+                        <li>@p.Nome — @p.Quantidade un. (@Formatacao.Moeda(p.Faturamento))</li>
+                    }
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>

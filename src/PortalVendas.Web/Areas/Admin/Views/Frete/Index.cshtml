@@ -1,0 +1,96 @@
+@model FreteAdminViewModel
+@{
+    ViewData["Title"] = "Frete e pagamento";
+    var c = Model.Configuracao;
+}
+<h1 class="h3 mb-3">Frete e pagamento</h1>
+<div class="row g-4">
+    <div class="col-xl-5">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="h6">Configurações</h2>
+                <form method="post" action="/admin/frete/salvarconfiguracao" asp-antiforgery="true">
+                    <div class="mb-3">
+                        <label for="CepOrigem" class="form-label">CEP de origem (de onde os pedidos são postados)</label>
+                        <input id="CepOrigem" name="CepOrigem" class="form-control" value="@Cep.Formatar(c.CepOrigem)" data-mascara="cep" maxlength="9" required />
+                    </div>
+                    <div class="mb-3">
+                        <label for="DiasManuseio" class="form-label">Dias de manuseio (separação e postagem)</label>
+                        <input id="DiasManuseio" name="DiasManuseio" type="number" min="0" max="30" class="form-control" value="@c.DiasManuseio" />
+                        <div class="form-text">Somados ao prazo da transportadora.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="FreteGratisAPartirDe" class="form-label">Frete grátis a partir de (R$)</label>
+                        <input id="FreteGratisAPartirDe" name="FreteGratisAPartirDe" class="form-control" inputmode="decimal" value="@Formatacao.Numero(c.FreteGratisAPartirDe)" />
+                        <div class="form-text">0 = sem frete grátis. Quando atingido, a opção mais barata fica gratuita.</div>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-6">
+                            <label for="ParcelasMaximas" class="form-label">Parcelas máximas</label>
+                            <input id="ParcelasMaximas" name="ParcelasMaximas" type="number" min="1" max="12" class="form-control" value="@c.ParcelasMaximas" />
+                        </div>
+                        <div class="col-6">
+                            <label for="ParcelaMinima" class="form-label">Parcela mínima (R$)</label>
+                            <input id="ParcelaMinima" name="ParcelaMinima" class="form-control" inputmode="decimal" value="@Formatacao.Numero(c.ParcelaMinima)" />
+                        </div>
+                    </div>
+                    <button class="btn btn-primary">Salvar configurações</button>
+                </form>
+            </div>
+        </div>
+        <div class="alert alert-info small mt-3">
+            A cotação principal é feita em tempo real no <strong>Melhor Envio</strong>, pelo peso e pelas medidas de cada produto.
+            As faixas ao lado só são usadas se a API do Melhor Envio estiver fora do ar ou não configurada.
+        </div>
+    </div>
+
+    <div class="col-xl-7">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="h6">Tabela de contingência por faixa de CEP</h2>
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle small">
+                        <thead><tr><th>Descrição</th><th>CEP inicial</th><th>CEP final</th><th>Valor (R$)</th><th>Prazo (dias)</th><th>Ativa</th><th></th></tr></thead>
+                        <tbody>
+                            @foreach (var f in Model.Faixas)
+                            {
+                                <tr>
+                                    <td colspan="7" class="p-0">
+                                        <div class="d-flex flex-wrap gap-1 align-items-center p-1">
+                                            <form method="post" action="/admin/frete/salvarfaixa" asp-antiforgery="true" class="d-flex flex-wrap gap-1 align-items-center flex-grow-1">
+                                                <input type="hidden" name="Id" value="@f.Id" />
+                                                <input name="Descricao" value="@f.Descricao" class="form-control form-control-sm" style="width: 170px" aria-label="Descrição" />
+                                                <input name="CepInicio" value="@Cep.Formatar(f.CepInicio)" class="form-control form-control-sm" style="width: 95px" aria-label="CEP inicial" />
+                                                <input name="CepFim" value="@Cep.Formatar(f.CepFim)" class="form-control form-control-sm" style="width: 95px" aria-label="CEP final" />
+                                                <input name="Valor" value="@Formatacao.Numero(f.Valor)" class="form-control form-control-sm" style="width: 80px" inputmode="decimal" aria-label="Valor" />
+                                                <input name="PrazoDias" value="@f.PrazoDias" type="number" min="1" class="form-control form-control-sm" style="width: 70px" aria-label="Prazo em dias" />
+                                                <input name="Ativa" type="checkbox" value="true" class="form-check-input" checked="@f.Ativa" aria-label="Ativa" />
+                                                <input type="hidden" name="Ativa" value="false" />
+                                                <button class="btn btn-sm btn-outline-primary">Salvar</button>
+                                            </form>
+                                            <form method="post" action="/admin/frete/excluirfaixa/@f.Id" asp-antiforgery="true" data-confirmar="Excluir esta faixa?">
+                                                <button class="btn btn-sm btn-outline-danger">Excluir</button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3 class="h6 mt-3">Nova faixa</h3>
+                <form method="post" action="/admin/frete/salvarfaixa" asp-antiforgery="true" class="row g-2">
+                    <input type="hidden" name="Id" value="0" />
+                    <input type="hidden" name="Ativa" value="true" />
+                    <div class="col-md-4"><input name="Descricao" class="form-control form-control-sm" placeholder="Descrição" required /></div>
+                    <div class="col-6 col-md-2"><input name="CepInicio" class="form-control form-control-sm" placeholder="CEP inicial" data-mascara="cep" required /></div>
+                    <div class="col-6 col-md-2"><input name="CepFim" class="form-control form-control-sm" placeholder="CEP final" data-mascara="cep" required /></div>
+                    <div class="col-6 col-md-2"><input name="Valor" class="form-control form-control-sm" placeholder="Valor" inputmode="decimal" required /></div>
+                    <div class="col-6 col-md-1"><input name="PrazoDias" type="number" min="1" class="form-control form-control-sm" placeholder="Dias" required /></div>
+                    <div class="col-md-1"><button class="btn btn-sm btn-primary w-100">Criar</button></div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

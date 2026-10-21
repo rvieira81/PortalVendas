@@ -1,0 +1,22 @@
+@model ProdutoResumo
+<a href="/produto/@Model.Slug" class="produto @(Model.Esgotado ? "produto-esgotado" : "")">
+    <span class="produto-foto">
+        <img src="@Formatacao.UrlImagem(Model.Imagem)" alt="" loading="lazy" width="400" height="400" />
+        @if (Model.Esgotado)
+        {
+            <span class="produto-aviso">Esgotado</span>
+        }
+        else if (Model.PrecoDe is not null)
+        {
+            <span class="produto-aviso produto-aviso-oferta">@(Math.Round((1 - Model.Preco / Model.PrecoDe.Value) * 100))% off</span>
+        }
+    </span>
+    <span class="produto-nome">@Model.Nome</span>
+    <span class="produto-precos">
+        <span class="etiqueta">@Formatacao.Moeda(Model.Preco)</span>
+        @if (Model.PrecoDe is not null)
+        {
+            <s class="preco-de">@Formatacao.Moeda(Model.PrecoDe.Value)</s>
+        }
+    </span>
+</a>

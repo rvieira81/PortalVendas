@@ -1,0 +1,157 @@
+@model PagamentoViewModel
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+@{
+    ViewData["Title"] = $"Pagamento do pedido nº {Model.Pedido.Numero}";
+    var pedido = Model.Pedido;
+    var aba = Model.AbaInicial switch
+    {
+        "boleto" => "boleto",
+        "cartao" => "cartao",
+        "pix" => "pix",
+        _ => Model.BoletoVigente is not null && Model.PixVigente is null ? "boleto" : "pix"
+    };
+    var tokenAntiforgery = Antiforgery.GetAndStoreTokens(Context).RequestToken;
+    var invariante = System.Globalization.CultureInfo.InvariantCulture;
+    var cartaoDisponivel = !string.IsNullOrWhiteSpace(Model.PublicKey);
+}
+<partial name="_Etapas" model="3" />
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <h1 class="h3 mb-1">Pagamento</h1>
+        <p class="text-muted">Pedido nº @pedido.Numero — total <strong>@Formatacao.Moeda(pedido.Total)</strong></p>
+
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link @(aba == "pix" ? "active" : "")" id="aba-pix" data-bs-toggle="tab" data-bs-target="#painel-pix" type="button" role="tab" aria-controls="painel-pix" aria-selected="@(aba == "pix" ? "true" : "false")">Pix</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link @(aba == "cartao" ? "active" : "")" id="aba-cartao" data-bs-toggle="tab" data-bs-target="#painel-cartao" type="button" role="tab" aria-controls="painel-cartao" aria-selected="@(aba == "cartao" ? "true" : "false")">Cartão de crédito</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link @(aba == "boleto" ? "active" : "")" id="aba-boleto" data-bs-toggle="tab" data-bs-target="#painel-boleto" type="button" role="tab" aria-controls="painel-boleto" aria-selected="@(aba == "boleto" ? "true" : "false")">Boleto</button>
+            </li>
+        </ul>
+
+        <div class="tab-content painel painel-abas">
+            @* ------------------------------------------------------------ Pix *@
+            <div class="tab-pane fade @(aba == "pix" ? "show active" : "")" id="painel-pix" role="tabpanel" aria-labelledby="aba-pix">
+                @if (Model.PixVigente is { } pix)
+                {
+                    <div class="row g-4 align-items-center">
+                        <div class="col-md-5 text-center">
+                            @if (!string.IsNullOrEmpty(pix.PixQrCodeBase64))
+                            {
+                                <img src="data:image/png;base64,@pix.PixQrCodeBase64" alt="QR Code do Pix" class="img-fluid border rounded" width="260" height="260" />
+                            }
+                        </div>
+                        <div class="col-md-7">
+                            <h2 class="h5">Escaneie o QR Code ou use o Pix copia e cola</h2>
+                            <ol class="small">
+                                <li>Abra o app do seu banco e escolha pagar com Pix.</li>
+                                <li>Escaneie o QR Code ou cole o código abaixo.</li>
+                                <li>Confirme o valor de <strong>@Formatacao.Moeda(pix.Valor)</strong>.</li>
+                            </ol>
+                            <label for="pix-codigo" class="form-label small">Código Pix copia e cola</label>
+                            <div class="input-group mb-2">
+                                <input id="pix-codigo" class="form-control font-monospace small" value="@pix.PixQrCode" readonly />
+                                <button class="btn btn-outline-primary" type="button" data-copiar="#pix-codigo">Copiar</button>
+                            </div>
+                            <p class="small text-muted mb-2">Válido até @Formatacao.DataHora(pix.ExpiraEm).</p>
+                            <div class="alert alert-info small mb-0" data-acompanhar-status="/pedidos/@pedido.Id/status" data-destino="/pedidos/@pedido.Id" role="status" aria-live="polite">
+                                Aguardando a confirmação do pagamento… Esta página atualiza sozinha.
+                            </div>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <p>Pagamento instantâneo, a qualquer hora. O pedido é confirmado assim que o Pix cai.</p>
+                    <form method="post" action="/pedidos/@pedido.Id/pagamento/pix" asp-antiforgery="true">
+                        <button type="submit" class="btn btn-comprar btn-lg" data-enviar-uma-vez>Gerar Pix de @Formatacao.Moeda(pedido.Total)</button>
+                    </form>
+                    <p class="small text-muted mt-2 mb-0">O código vale por 30 minutos.</p>
+                }
+            </div>
+
+            @* ------------------------------------------------------------ Cartão *@
+            <div class="tab-pane fade @(aba == "cartao" ? "show active" : "")" id="painel-cartao" role="tabpanel" aria-labelledby="aba-cartao">
+                @if (cartaoDisponivel)
+                {
+                    <p class="small text-muted">Em até @(Model.ParcelasMaximas)x. Os dados do cartão vão direto para o Mercado Pago e não passam pelos nossos servidores.</p>
+                    <div id="cartao-mensagem" class="alert d-none" role="alert"></div>
+                    <div id="cartao-brick"
+                         data-public-key="@Model.PublicKey"
+                         data-valor="@pedido.Total.ToString(invariante)"
+                         data-email="@Model.EmailPagador"
+                         data-parcelas-max="@Model.ParcelasMaximas"
+                         data-url="/pedidos/@pedido.Id/pagamento/cartao"
+                         data-token="@tokenAntiforgery"></div>
+                }
+                else
+                {
+                    <div class="alert alert-secondary mb-0">Pagamento com cartão indisponível no momento. Use Pix ou boleto.</div>
+                }
+            </div>
+
+            @* ------------------------------------------------------------ Boleto *@
+            <div class="tab-pane fade @(aba == "boleto" ? "show active" : "")" id="painel-boleto" role="tabpanel" aria-labelledby="aba-boleto">
+                @if (Model.BoletoVigente is { } boleto)
+                {
+                    <div>
+                    <h2 class="h5">Boleto gerado</h2>
+                    <p>Vencimento: <strong>@Formatacao.Data(boleto.ExpiraEm!.Value)</strong> — valor <strong>@Formatacao.Moeda(boleto.Valor)</strong></p>
+                    @if (!string.IsNullOrEmpty(boleto.BoletoLinhaDigitavel))
+                    {
+                        <label for="linha-digitavel" class="form-label small">Linha digitável</label>
+                        <div class="input-group mb-3">
+                            <input id="linha-digitavel" class="form-control font-monospace small" value="@boleto.BoletoLinhaDigitavel" readonly />
+                            <button class="btn btn-outline-primary" type="button" data-copiar="#linha-digitavel">Copiar</button>
+                        </div>
+                    }
+                    @if (!string.IsNullOrEmpty(boleto.BoletoUrl))
+                    {
+                        <a href="@boleto.BoletoUrl" target="_blank" rel="noopener" class="btn btn-primary">Abrir boleto (PDF)</a>
+                    }
+                    <p class="small text-muted mt-3 mb-0" data-acompanhar-status="/pedidos/@pedido.Id/status" data-destino="/pedidos/@pedido.Id">
+                        A compensação do boleto leva até 3 dias úteis após o pagamento. Você recebe um e-mail quando for confirmado.
+                    </p>
+                    </div>
+                }
+                else
+                {
+                    <p>O boleto vence em 3 dias úteis. A confirmação leva até 3 dias úteis depois do pagamento, e o prazo de entrega começa a contar a partir daí.</p>
+                    <form method="post" action="/pedidos/@pedido.Id/pagamento/boleto" asp-antiforgery="true">
+                        <button type="submit" class="btn btn-comprar btn-lg" data-enviar-uma-vez>Gerar boleto de @Formatacao.Moeda(pedido.Total)</button>
+                    </form>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="painel resumo">
+            <div>
+                <h2 class="h5">Resumo</h2>
+                <ul class="list-unstyled small">
+                    @foreach (var i in pedido.Itens)
+                    {
+                        <li class="d-flex justify-content-between"><span>@i.Quantidade× @i.NomeProduto</span><span class="ms-2 text-nowrap">@Formatacao.Moeda(i.Total)</span></li>
+                    }
+                </ul>
+                <div class="d-flex justify-content-between small"><span>Frete (@pedido.FreteDescricao)</span><span class="ms-2 text-nowrap">@Formatacao.Moeda(pedido.ValorFrete)</span></div>
+                <hr />
+                <div class="d-flex justify-content-between fw-semibold"><span>Total</span><span>@Formatacao.Moeda(pedido.Total)</span></div>
+                <p class="small text-muted mt-3 mb-0">Entrega para: @pedido.Entrega.Destinatario — @pedido.Entrega.Cidade/@pedido.Entrega.Uf</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @if (cartaoDisponivel)
+    {
+        <script src="https://sdk.mercadopago.com/js/v2"></script>
+        <script src="~/js/checkout-cartao.js" asp-append-version="true"></script>
+    }
+}

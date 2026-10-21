@@ -1,0 +1,13 @@
+@model ErroViewModel
+@{
+    ViewData["Title"] = Model.Titulo;
+}
+<div class="text-center py-5">
+    <h1 class="display-6">@Model.Titulo</h1>
+    <p class="lead text-muted">@Model.Mensagem</p>
+    @if (Model.Codigo >= 500 && !string.IsNullOrEmpty(Model.RequestId))
+    {
+        <p class="small text-muted">Se precisar falar com o atendimento, informe o código <code>@Model.RequestId</code>.</p>
+    }
+    <a class="btn btn-primary mt-3" href="/">Voltar para a loja</a>
+</div>

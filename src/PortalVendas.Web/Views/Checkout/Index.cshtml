@@ -1,0 +1,107 @@
+@model CheckoutViewModel
+@{
+    ViewData["Title"] = "Entrega e revisão";
+    var frete = Model.FreteSelecionado;
+}
+<partial name="_Etapas" model="2" />
+<h1 class="pagina-titulo">Entrega e revisão</h1>
+
+@if (!Model.EmailConfirmado)
+{
+    <div class="alert alert-warning">
+        Confirme seu e-mail para finalizar a compra. Não recebeu? <a href="/minha-conta">Reenviar pela Minha conta</a>.
+    </div>
+}
+
+<form method="post" action="/checkout/confirmar" asp-antiforgery="true" data-checkout>
+    <input type="hidden" name="ChaveIdempotencia" value="@Model.ChaveIdempotencia" />
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <section class="painel mb-4">
+                <div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h2 class="h5 mb-0">Endereço de entrega</h2>
+                        <a href="/minha-conta/enderecos/novo?retornarPara=%2Fcheckout" class="btn btn-sm btn-outline-primary">Novo endereço</a>
+                    </div>
+                    <fieldset>
+                        <legend class="visually-hidden">Escolha o endereço</legend>
+                        @foreach (var e in Model.Enderecos)
+                        {
+                            <div class="form-check opcao">
+                                <input class="form-check-input" type="radio" name="EnderecoId" id="end-@e.Id" value="@e.Id"
+                                       checked="@(e.Id == Model.EnderecoSelecionadoId)" data-recotar="/checkout?enderecoId=@e.Id" />
+                                <label class="form-check-label w-100" for="end-@e.Id">
+                                    <strong>@e.Apelido</strong> — @e.Destinatario<br />
+                                    <span class="small text-muted">@e.Resumo</span>
+                                </label>
+                            </div>
+                        }
+                    </fieldset>
+                    <noscript><p class="small mt-2">Ao trocar o endereço, clique em "Recalcular frete".</p>
+                        <button type="submit" formaction="/checkout" formmethod="get" class="btn btn-sm btn-outline-secondary">Recalcular frete</button></noscript>
+                </div>
+            </section>
+
+            <section class="painel">
+                <div>
+                    <h2 class="h5 mb-3">Forma de entrega</h2>
+                    @if (Model.ErroFrete is not null)
+                    {
+                        <div class="alert alert-danger mb-0">@Model.ErroFrete</div>
+                    }
+                    else
+                    {
+                        <fieldset>
+                            <legend class="visually-hidden">Escolha a forma de entrega</legend>
+                            @foreach (var o in Model.OpcoesFrete)
+                            {
+                                <div class="form-check opcao">
+                                    <input class="form-check-input" type="radio" name="CodigoFrete" id="frete-@o.Codigo" value="@o.Codigo"
+                                           checked="@(o.Codigo == frete?.Codigo)" data-valor-frete="@o.Valor.ToString(System.Globalization.CultureInfo.InvariantCulture)" required />
+                                    <label class="form-check-label d-flex justify-content-between w-100" for="frete-@o.Codigo">
+                                        <span>
+                                            <strong>@o.Descricao</strong><br />
+                                            <span class="small text-muted">Chega em até @Formatacao.Prazo(o.PrazoDias) após a confirmação do pagamento</span>
+                                        </span>
+                                        <span class="opcao-preco">@(o.Gratis ? "Grátis" : Formatacao.Moeda(o.Valor))</span>
+                                    </label>
+                                </div>
+                            }
+                        </fieldset>
+                        if (Model.OpcoesFrete.Any(o => o.Contingencia))
+                        {
+                            <p class="small text-muted mb-0">Valor estimado pela tabela da loja.</p>
+                        }
+                    }
+                </div>
+            </section>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="painel resumo sticky-lg-top" style="top: 24px">
+                <div>
+                    <h2 class="h5">Resumo do pedido</h2>
+                    <ul class="list-unstyled small mb-3">
+                        @foreach (var i in Model.Carrinho.Itens)
+                        {
+                            <li class="d-flex justify-content-between">
+                                <span>@i.Quantidade× @i.Nome</span>
+                                <span class="text-nowrap ms-2">@Formatacao.Moeda(i.Total)</span>
+                            </li>
+                        }
+                    </ul>
+                    <div class="d-flex justify-content-between"><span>Subtotal</span><span>@Formatacao.Moeda(Model.Carrinho.Subtotal)</span></div>
+                    <div class="d-flex justify-content-between"><span>Frete</span><span data-resumo-frete>@(frete is null ? "—" : frete.Gratis ? "Grátis" : Formatacao.Moeda(frete.Valor))</span></div>
+                    <hr />
+                    <div class="d-flex justify-content-between fs-5 fw-semibold">
+                        <span>Total</span>
+                        <span data-resumo-total data-subtotal="@Model.Carrinho.Subtotal.ToString(System.Globalization.CultureInfo.InvariantCulture)">@Formatacao.Moeda(Model.Total)</span>
+                    </div>
+                    <button type="submit" class="btn btn-comprar btn-lg w-100 mt-3" data-enviar-uma-vez
+                            disabled="@(!Model.EmailConfirmado || Model.ErroFrete is not null)">Ir para o pagamento</button>
+                    <p class="small text-muted mt-2 mb-0">Os produtos ficam reservados enquanto você paga.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
