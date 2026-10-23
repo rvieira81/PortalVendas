@@ -1,0 +1,19 @@
+# Não enviar para o contexto de build: artefatos, dados locais e segredos
+**/bin/
+**/obj/
+**/.vs/
+**/*.user
+**/*.suo
+TestResults/
+coverage*/
+logs/
+emails-dev/
+uploads/
+keys/
+publish/
+.sync/
+.git/
+*.zip
+appsettings.Production.json
+appsettings.Homologacao.json
+*.pfx
