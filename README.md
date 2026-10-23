@@ -48,6 +48,17 @@ dotnet test PortalVendas.sln
 
 97 casos: regras de domínio, serviços com banco SQLite em memória (estoque atômico, idempotência, webhook, expiração, estorno, IDOR, bloqueio de login, MFA) e leitura das respostas do Mercado Pago e do Melhor Envio.
 
+## Docker
+
+```bash
+docker build -t portalvendas-web .
+docker run -p 8080:8080 \
+  -e ConnectionStrings__PortalVendas="Server=...;Database=PortalVendas;..." \
+  portalvendas-web
+```
+
+A imagem roda como usuário sem privilégios e escuta na porta 8080. Segredos e `appsettings.Production.json` não entram na imagem (ver `.dockerignore`); passe-os por variáveis de ambiente.
+
 ## Estrutura
 
 ```
