@@ -1,106 +1,158 @@
-@model ProdutoDetalhe
+@model ProdutoPaginaViewModel
 @{
-    ViewData["Title"] = Model.Nome;
-    ViewData["Descricao"] = Model.Descricao.Length > 150 ? Model.Descricao[..150] : Model.Descricao;
-    var parcelas = Math.Clamp((int)Math.Floor(Model.Preco / 10m), 1, 12);
+    var p = Model.Produto;
+    ViewData["Title"] = p.Nome;
+    ViewData["Descricao"] = p.Descricao.Length > 150 ? p.Descricao[..150] : p.Descricao;
+    var parcelas = Model.Parcelas;
+    var desconto = p.PrecoDe is { } de && de > p.Preco ? (int)Math.Round((1 - p.Preco / de) * 100) : 0;
+    var config = Model.Configuracao;
+    var maximo = Math.Max(1, Math.Min(p.QuantidadeMaximaCompra, p.Disponivel));
 }
 <nav aria-label="Você está em" class="trilha">
     <a href="/">Início</a>
     <span aria-hidden="true">/</span>
-    <a href="/categoria/@Model.Categoria.Slug">@Model.Categoria.Nome</a>
+    <a href="/categoria/@p.Categoria.Slug">@p.Categoria.Nome</a>
+    <span aria-hidden="true">/</span>
+    <span aria-current="page">@p.Nome</span>
 </nav>
 
-<div class="produto-pagina">
-    <div class="produto-galeria">
-        @if (Model.Imagens.Count == 0)
+<div class="pp">
+    <div class="pp-galeria">
+        @if (p.Imagens.Count > 1)
         {
-            <div class="galeria-principal"><img src="@Formatacao.UrlImagem(null)" alt="" /></div>
-        }
-        else
-        {
-            <div class="galeria-principal">
-                <img id="foto-principal" src="@Formatacao.UrlImagem(Model.Imagens[0])" alt="@Model.Nome" />
+            <div class="pp-miniaturas" role="list">
+                @for (var i = 0; i < p.Imagens.Count; i++)
+                {
+                    <button type="button" role="listitem" class="miniatura @(i == 0 ? "ativa" : "")"
+                            data-foto="@Formatacao.UrlImagem(p.Imagens[i])" aria-label="Ver foto @(i + 1)">
+                        <img src="@Formatacao.UrlImagem(p.Imagens[i])" alt="" width="76" height="76" />
+                    </button>
+                }
             </div>
-            if (Model.Imagens.Count > 1)
+        }
+        <div class="pp-foto">
+            <img id="foto-principal" src="@Formatacao.UrlImagem(p.Imagens.Count > 0 ? p.Imagens[0] : null)" alt="@p.Nome" width="640" height="640" />
+            @if (desconto > 0)
             {
-                <div class="galeria-miniaturas" role="list">
-                    @for (var i = 0; i < Model.Imagens.Count; i++)
+                <span class="card-selo card-selo-oferta pp-selo">-@desconto%</span>
+            }
+        </div>
+    </div>
+
+    <div class="pp-compra">
+        <div>
+            <span class="pp-codigo">Código @p.Sku</span>
+            <h1 class="pp-nome">@p.Nome</h1>
+        </div>
+
+        <div class="pp-precos">
+            @if (desconto > 0)
+            {
+                <s class="card-de">De @Formatacao.Moeda(p.PrecoDe!.Value)</s>
+            }
+            <span class="pp-preco">@Formatacao.Moeda(p.Preco)</span>
+            @if (parcelas > 1)
+            {
+                <span>ou em até <strong>@(parcelas)x de @Formatacao.Moeda(Math.Round(p.Preco / parcelas, 2))</strong> sem juros no cartão</span>
+                <button type="button" class="pp-ver-parcelas" aria-expanded="false" aria-controls="tabela-parcelas" data-alternar="tabela-parcelas">Ver todas as parcelas</button>
+                <div id="tabela-parcelas" class="pp-parcelas" hidden>
+                    @for (var n = 1; n <= parcelas; n++)
                     {
-                        <button type="button" role="listitem" class="miniatura @(i == 0 ? "ativa" : "")"
-                                data-foto="@Formatacao.UrlImagem(Model.Imagens[i])" aria-label="Ver foto @(i + 1)">
-                            <img src="@Formatacao.UrlImagem(Model.Imagens[i])" alt="" />
-                        </button>
+                        <span>@(n)x de @Formatacao.Moeda(Math.Round(p.Preco / n, 2))</span>
                     }
                 </div>
             }
-        }
-    </div>
-
-    <div class="produto-info">
-        <h1>@Model.Nome</h1>
-
-        <div class="produto-preco-bloco">
-            @if (Model.PrecoDe is not null)
+            else
             {
-                <s class="preco-de">de @Formatacao.Moeda(Model.PrecoDe.Value)</s>
+                <span>à vista no Pix, cartão ou boleto</span>
             }
-            <span class="etiqueta etiqueta-grande">@Formatacao.Moeda(Model.Preco)</span>
-            <p class="parcelas">
-                @if (parcelas > 1)
-                {
-                    <text>ou em até @(parcelas)x de @Formatacao.Moeda(Model.Preco / parcelas) no cartão</text>
-                }
-                else
-                {
-                    <text>à vista no Pix, cartão ou boleto</text>
-                }
-            </p>
         </div>
 
-        @if (Model.Esgotado)
+        @if (p.Esgotado)
         {
             <div class="aviso-esgotado">
-                <strong>Produto esgotado.</strong> Volte em breve ou veja outros produtos de <a href="/categoria/@Model.Categoria.Slug">@Model.Categoria.Nome</a>.
+                <strong>Produto esgotado.</strong> Volte em breve ou veja outros produtos de <a href="/categoria/@p.Categoria.Slug">@p.Categoria.Nome</a>.
             </div>
         }
         else
         {
-            <form method="post" action="/carrinho/adicionar" asp-antiforgery="true" class="comprar">
-                <input type="hidden" name="produtoId" value="@Model.Id" />
-                <div class="quantidade">
-                    <label for="quantidade">Quantidade</label>
-                    <select id="quantidade" name="quantidade" class="form-select">
-                        @for (var q = 1; q <= Model.QuantidadeMaximaCompra; q++)
-                        {
-                            <option value="@q">@q</option>
-                        }
-                    </select>
+            <form method="post" action="/carrinho/adicionar" asp-antiforgery="true" class="pp-form">
+                <input type="hidden" name="produtoId" value="@p.Id" />
+                <div class="pp-linha">
+                    <div class="pp-qtd" role="group" aria-label="Quantidade">
+                        <button type="button" data-qtd="-1" aria-label="Diminuir">−</button>
+                        <input id="quantidade" name="quantidade" type="number" min="1" max="@maximo" value="1" inputmode="numeric" aria-label="Quantidade" />
+                        <button type="button" data-qtd="1" aria-label="Aumentar">+</button>
+                    </div>
+                    @if (p.Disponivel <= 5)
+                    {
+                        <span class="pp-estoque pp-estoque-pouco">Restam só @p.Disponivel @(p.Disponivel == 1 ? "unidade" : "unidades")</span>
+                    }
+                    else
+                    {
+                        <span class="pp-estoque">Em estoque · envio em @Formatacao.Prazo(Math.Max(1, config.DiasManuseio))</span>
+                    }
                 </div>
-                <button type="submit" class="btn btn-comprar btn-lg">Adicionar ao carrinho</button>
+                <div class="pp-botoes">
+                    <button type="submit" name="retornarPara" value="/carrinho" class="btn btn-comprar btn-lg">Comprar agora</button>
+                    <button type="submit" name="abrirMini" value="true" class="btn btn-outline-primary btn-lg"
+                            formaction="/carrinho/adicionar?retornarPara=@Uri.EscapeDataString("/produto/" + p.Slug)">Adicionar ao carrinho</button>
+                </div>
             </form>
-            if (Model.Disponivel <= 5)
-            {
-                <p class="poucas-unidades">Restam só @Model.Disponivel @(Model.Disponivel == 1 ? "unidade" : "unidades").</p>
-            }
         }
 
-        <ul class="produto-fatos">
-            <li><strong>Frete</strong> calculado pelo seu CEP no fechamento do pedido, com o prazo de cada transportadora.</li>
-            <li><strong>Pagamento</strong> por Pix, cartão de crédito ou boleto, processado pelo Mercado Pago.</li>
-            <li><strong>Cancelamento</strong> pelo próprio site enquanto o pedido não foi enviado.</li>
-        </ul>
+        <div class="pp-frete" data-frete-produto="@p.Id">
+            <label for="cep-frete">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg>
+                Calcule o frete e o prazo
+            </label>
+            <div class="pp-frete-linha">
+                <input id="cep-frete" type="text" inputmode="numeric" maxlength="9" placeholder="00000-000" data-mascara="cep" autocomplete="postal-code" />
+                <button type="button" class="btn btn-primary" data-calcular-frete>Calcular</button>
+            </div>
+            <div class="pp-frete-resultado" aria-live="polite"></div>
+            @if (config.TemFreteGratis)
+            {
+                <span class="pp-frete-gratis">Frete grátis em compras acima de @Formatacao.Moeda(config.FreteGratisAPartirDe)</span>
+            }
+            <a class="pp-frete-cep" href="https://buscacepinter.correios.com.br/app/endereco/index.php" target="_blank" rel="noopener">Não sei meu CEP</a>
+        </div>
 
-        <section class="produto-descricao">
-            <h2>Sobre o produto</h2>
-            <div class="texto-descricao">@Model.Descricao</div>
-            <dl class="medidas">
-                <dt>Embalagem</dt>
-                <dd>@Formatacao.Numero(Model.AlturaCm, 0) × @Formatacao.Numero(Model.LarguraCm, 0) × @Formatacao.Numero(Model.ComprimentoCm, 0) cm</dd>
-                <dt>Peso</dt>
-                <dd>@Formatacao.Numero(Model.PesoKg, 2) kg</dd>
-                <dt>Código</dt>
-                <dd>@Model.Sku</dd>
-            </dl>
-        </section>
+        <div class="pp-confianca">
+            <span><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg>Compra segura</span>
+            <span><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 9 9-9 9-9-9z"/></svg>Pix, cartão ou boleto</span>
+            <span><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 1 0 3-6.2"/><path d="M4 4v4h4"/></svg>Cancele antes do envio</span>
+        </div>
     </div>
 </div>
+
+<section class="pp-detalhes" aria-labelledby="t-sobre">
+    <h2 id="t-sobre">Sobre o produto</h2>
+    <div class="pp-detalhes-grade">
+        <div class="texto-descricao">@p.Descricao</div>
+        <table class="pp-especificacoes">
+            <tbody>
+                <tr><th scope="row">Embalagem (A × L × C)</th><td>@Formatacao.Numero(p.AlturaCm, 0) × @Formatacao.Numero(p.LarguraCm, 0) × @Formatacao.Numero(p.ComprimentoCm, 0) cm</td></tr>
+                <tr><th scope="row">Peso</th><td>@Formatacao.Numero(p.PesoKg, 2) kg</td></tr>
+                <tr><th scope="row">Categoria</th><td><a href="/categoria/@p.Categoria.Slug">@p.Categoria.Nome</a></td></tr>
+                <tr><th scope="row">Código</th><td>@p.Sku</td></tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+@if (Model.Relacionados.Count > 0)
+{
+    <section class="secao" aria-labelledby="t-rel">
+        <div class="secao-topo">
+            <h2 id="t-rel">Você também pode gostar</h2>
+            <a href="/categoria/@p.Categoria.Slug">Ver mais de @p.Categoria.Nome</a>
+        </div>
+        <div class="grade-cards">
+            @foreach (var r in Model.Relacionados)
+            {
+                <partial name="_CardProduto" model="r" />
+            }
+        </div>
+    </section>
+}

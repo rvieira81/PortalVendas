@@ -33,6 +33,7 @@ Loja virtual de um vendedor: vitrine, carrinho, cadastro com CPF, endereço por 
 | 5 Testes | tests/ (97 casos), docs/05-testes.md | 97/97 passando; roteiro manual pendente |
 | 6 Implantação | deploy/*.ps1, web.config, CI, docs/06-implantacao.md | Pronto |
 | 7 Entrega | README.md, docs/07-manual.md | Pronto |
+| 8 Produto revendável | Licença assinada (tools/PortalVendas.Licenciador), Identidade da loja no painel, vitrine v2 (banner, seções, mini carrinho, frete na página do produto), docs/08-licenciamento.md | Implementado — aguardando compilação local |
 
 ## Pendências / riscos abertos
 - Ambiente de desenvolvimento usa LocalDB sem criptografia (`Encrypt=False` só em appsettings.Development.json e no deploy-db.ps1 para `(localdb)`).
@@ -41,8 +42,12 @@ Loja virtual de um vendedor: vitrine, carrinho, cadastro com CPF, endereço por 
 - **Textos legais** (termos e privacidade) são modelos: revisão jurídica antes do go-live.
 - **Nota fiscal** fora do MVP: vendas exigem emissão de NF-e por fora até a integração (backlog).
 - Domínio, certificado HTTPS e conta SMTP de produção a definir.
+- **Chave do licenciamento:** gerar o par de chaves e colar a pública em `ChavePublicaLicenca.cs` antes de vender (sem ela nenhuma licença é aceita).
+- **Proteção da licença** só vale entregando o site compilado (idealmente ofuscado) ou como SaaS — nunca o código-fonte.
 
 ## Backlog pós-MVP
+- Desconto no Pix (muda o total do pedido e o valor cobrado no Mercado Pago) e cupons de desconto.
+- Favoritos, avaliações de produto e newsletter (aparecem na prévia de design, ainda sem backend).
 1. Emissão de NF-e (integração com emissor: eNotas, Focus NFe, NFE.io)
 2. Geração de etiqueta do Melhor Envio pelo painel (RF22) e rastreio automático
 3. Cupons de desconto (RF21) — o pedido já tem a coluna `Desconto`

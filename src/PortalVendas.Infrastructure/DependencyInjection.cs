@@ -11,6 +11,8 @@ using PortalVendas.Application.Pagamentos;
 using PortalVendas.Infrastructure.Dados;
 using PortalVendas.Infrastructure.Frete;
 using PortalVendas.Infrastructure.Jobs;
+using PortalVendas.Infrastructure.Licenciamento;
+using PortalVendas.Application.Licenciamento;
 using PortalVendas.Infrastructure.Pagamentos;
 using PortalVendas.Infrastructure.Servicos;
 
@@ -37,6 +39,8 @@ public static class DependencyInjection
         services.Configure<MelhorEnvioOptions>(configuracao.GetSection(MelhorEnvioOptions.Secao));
         services.Configure<SmtpOptions>(configuracao.GetSection(SmtpOptions.Secao));
         services.Configure<ImagensOptions>(configuracao.GetSection(ImagensOptions.Secao));
+        services.Configure<LicencaOptions>(configuracao.GetSection(LicencaOptions.Secao));
+        services.AddSingleton<ILicencaLoja, ServicoLicenca>();
 
         services.AddHttpClient<IGatewayPagamento, MercadoPagoGateway>((sp, http) =>
         {

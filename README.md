@@ -11,6 +11,7 @@ Loja virtual de um vendedor em **C# / ASP.NET Core MVC (.NET 10)** com **SQL Ser
 | [docs/05-testes.md](docs/05-testes.md) | Plano de testes, rastreabilidade e roteiros manuais |
 | [docs/06-implantacao.md](docs/06-implantacao.md) | IIS, segredos, publicação, rollback e go-live |
 | [docs/07-manual.md](docs/07-manual.md) | Manual do cliente e do administrador |
+| [docs/08-licenciamento.md](docs/08-licenciamento.md) | Licença por loja (nome, CNPJ, domínio) e identidade visual |
 
 ## Rodar localmente
 
@@ -39,6 +40,12 @@ dotnet run --launch-profile https
 Em desenvolvimento os e-mails (confirmação de cadastro, pedidos) são gravados como `.html` em `src\PortalVendas.Web\emails-dev\` — abra o arquivo para clicar no link de confirmação.
 
 Para testar o **webhook** localmente, exponha a porta com um túnel (ngrok, Dev Tunnels do Visual Studio) e configure a URL pública no painel do Mercado Pago e em `MercadoPago:UrlNotificacao`. Sem webhook, o job de conciliação confirma os pagamentos em até 10 minutos.
+
+## Licença e identidade da loja
+
+Nome, razão social, CNPJ e domínios vêm do arquivo `licenca.lic`, assinado pelo fornecedor; logo, cores, contatos e banner
+o lojista altera em **Painel → Identidade da loja**. Sem licença o site roda como demonstração, só em `localhost`.
+Gerar chaves e emitir licenças: [docs/08-licenciamento.md](docs/08-licenciamento.md).
 
 ## Testes
 

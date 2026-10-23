@@ -18,6 +18,7 @@ public static class DependencyInjection
         services.AddSingleton<IRelogio, RelogioSistema>();
 
         services.AddScoped<ConfiguracaoLojaService>();
+        services.AddScoped<IdentidadeLojaService>();
         services.AddScoped<CatalogoService>();
         services.AddScoped<CarrinhoService>();
         services.AddScoped<FreteService>();

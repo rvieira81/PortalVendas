@@ -6,12 +6,12 @@ namespace PortalVendas.Infrastructure.Servicos;
 public class LojaOptions
 {
     public const string Secao = "Loja";
-    public string Nome { get; set; } = "Portal de Vendas";
+    // Nome, razão social e CNPJ não ficam mais aqui: vêm da licença (painel → Identidade da loja).
     /// <summary>URL pública do site, com https e sem barra no fim. Usada nos links dos e-mails.</summary>
     public string UrlBase { get; set; } = "https://localhost:5001";
     public string EmailAtendimento { get; set; } = "atendimento@sualoja.com.br";
+    /// <summary>Usados só enquanto o lojista não preenche os contatos no painel.</summary>
     public string? TelefoneAtendimento { get; set; }
-    public string? Cnpj { get; set; }
 }
 
 /// <summary>Links absolutos a partir da URL configurada, nunca do cabeçalho Host (evita host header injection).</summary>

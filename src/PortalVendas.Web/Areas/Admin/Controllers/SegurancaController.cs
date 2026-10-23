@@ -1,8 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
 using PortalVendas.Application.Contas;
-using PortalVendas.Infrastructure.Servicos;
+using PortalVendas.Application.Licenciamento;
 using PortalVendas.Web.Areas.Admin.Models;
 using PortalVendas.Web.Infra;
 
@@ -15,13 +14,13 @@ public class SegurancaController : Controller
 {
     private readonly ContaService _contas;
     private readonly ServicoSessao _sessao;
-    private readonly LojaOptions _loja;
+    private readonly ILicencaLoja _licenca;
 
-    public SegurancaController(ContaService contas, ServicoSessao sessao, IOptions<LojaOptions> loja)
+    public SegurancaController(ContaService contas, ServicoSessao sessao, ILicencaLoja licenca)
     {
         _contas = contas;
         _sessao = sessao;
-        _loja = loja.Value;
+        _licenca = licenca;
     }
 
     public async Task<IActionResult> Configurar(CancellationToken ct)
@@ -63,6 +62,6 @@ public class SegurancaController : Controller
     {
         Segredo = segredo,
         SegredoFormatado = Totp.FormatarParaLeitura(segredo),
-        UriOtpAuth = Totp.MontarUri(_loja.Nome, User.Autor(), segredo)
+        UriOtpAuth = Totp.MontarUri(_licenca.Estado.Ativa ? _licenca.Estado.Dados!.NomeLoja : "Portal de Vendas", User.Autor(), segredo)
     };
 }

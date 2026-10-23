@@ -1,5 +1,6 @@
-@inject IOptions<PortalVendas.Infrastructure.Servicos.LojaOptions> Loja
+@inject PortalVendas.Application.Licenciamento.ILicencaLoja Licenca
 @{
+    var nomeLoja = Licenca.Estado.Ativa ? Licenca.Estado.Dados!.NomeLoja : PortalVendas.Application.Admin.IdentidadeLojaService.NomeDemonstracao;
     var controlador = ViewContext.RouteData.Values["controller"]?.ToString();
     string Ativo(string c) => string.Equals(controlador, c, StringComparison.OrdinalIgnoreCase) ? "active" : "";
 }
@@ -9,7 +10,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex, nofollow" />
-    <title>@ViewData["Title"] — Admin — @Loja.Value.Nome</title>
+    <title>@ViewData["Title"] — Admin — @nomeLoja</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
           integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
@@ -17,7 +18,7 @@
 <body class="bg-light">
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark" aria-label="Menu do painel">
         <div class="container-fluid">
-            <a class="navbar-brand" href="/admin">@Loja.Value.Nome · Admin</a>
+            <a class="navbar-brand" href="/admin">@nomeLoja · Admin</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu-admin" aria-controls="menu-admin" aria-expanded="false" aria-label="Abrir menu">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -28,6 +29,7 @@
                     <li class="nav-item"><a class="nav-link @Ativo("Produtos")" href="/admin/produtos">Produtos</a></li>
                     <li class="nav-item"><a class="nav-link @Ativo("Categorias")" href="/admin/categorias">Categorias</a></li>
                     <li class="nav-item"><a class="nav-link @Ativo("Frete")" href="/admin/frete">Frete e pagamento</a></li>
+                    <li class="nav-item"><a class="nav-link @Ativo("Identidade")" href="/admin/identidade">Identidade da loja</a></li>
                 </ul>
                 <span class="navbar-text small me-3">@User.Autor()</span>
                 <a class="btn btn-sm btn-outline-light me-2" href="/" target="_blank">Ver loja</a>
@@ -37,6 +39,12 @@
             </div>
         </div>
     </nav>
+    @if (!Licenca.Estado.Ativa)
+    {
+        <div class="alert alert-warning rounded-0 mb-0 py-2 small text-center">
+            @Licenca.Estado.Mensagem <a href="/admin/identidade" class="alert-link">Instalar licença</a>
+        </div>
+    }
     <main class="container-fluid py-4">
         <partial name="_Mensagens" />
         @RenderBody()

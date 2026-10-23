@@ -171,6 +171,9 @@ try
         OnPrepareResponse = c => c.Context.Response.Headers.CacheControl = "public,max-age=2592000,immutable"
     });
 
+    // Licença: domínio autorizado (depois dos arquivos estáticos, antes de qualquer página)
+    app.UseMiddleware<LicencaMiddleware>();
+
     app.UseSerilogRequestLogging(o =>
     {
         o.EnrichDiagnosticContext = (diag, http) =>
@@ -189,6 +192,13 @@ try
     app.MapControllerRoute("areas", "{area:exists}/{controller=Painel}/{action=Index}/{id?}");
     app.MapControllers();
     app.MapControllerRoute("default", "{controller=Home}/{action=Index}/{id?}");
+
+    var licenca = app.Services.GetRequiredService<PortalVendas.Application.Licenciamento.ILicencaLoja>();
+    if (!licenca.Estado.Ativa)
+        Log.Warning("Licença: {Mensagem} A vitrine só abre em localhost até a licença ser instalada (painel → Identidade da loja).", licenca.Estado.Mensagem);
+    var urlBase = app.Services.GetRequiredService<IOptions<LojaOptions>>().Value.UrlBase;
+    if (licenca.Estado.Ativa && Uri.TryCreate(urlBase, UriKind.Absolute, out var uriBase) && !licenca.HostAutorizado(uriBase.Host, requisicaoLocal: false))
+        Log.Warning("Loja:UrlBase ({UrlBase}) não está entre os domínios da licença: os links dos e-mails vão abrir a página de loja indisponível", urlBase);
 
     var mp = app.Services.GetRequiredService<IOptions<MercadoPagoOptions>>().Value;
     if (string.IsNullOrWhiteSpace(mp.AccessToken) || string.IsNullOrWhiteSpace(mp.SegredoWebhook))

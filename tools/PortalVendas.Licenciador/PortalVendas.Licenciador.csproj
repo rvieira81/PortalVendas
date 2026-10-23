@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Ferramenta do FORNECEDOR (Prado): gera o par de chaves e emite as licenças das lojas.
+       Não faz parte do pacote entregue ao cliente — publique só o PortalVendas.Web. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>licenciador</AssemblyName>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\PortalVendas.Infrastructure\PortalVendas.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

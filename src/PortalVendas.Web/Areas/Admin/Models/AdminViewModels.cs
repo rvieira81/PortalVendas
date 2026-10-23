@@ -140,3 +140,29 @@ public class ConfigurarMfaViewModel
     [Required(ErrorMessage = "Informe o código.")]
     public string? Codigo { get; set; }
 }
+
+public class IdentidadeAdminViewModel
+{
+    public required PortalVendas.Application.Admin.IdentidadeLoja Identidade { get; init; }
+    public required PortalVendas.Application.Licenciamento.EstadoLicenca Licenca { get; init; }
+}
+
+public class IdentidadeInput
+{
+    public string CorPrincipal { get; set; } = string.Empty;
+    public string CorDestaque { get; set; } = string.Empty;
+    public string? WhatsApp { get; set; }
+    public string? Telefone { get; set; }
+    public string? Email { get; set; }
+    public string? Endereco { get; set; }
+    public string? Horario { get; set; }
+    public string? Instagram { get; set; }
+    public string? Facebook { get; set; }
+    public string? Youtube { get; set; }
+    public string? AvisoTopo { get; set; }
+    public string? BannerSelo { get; set; }
+    public string? BannerTitulo { get; set; }
+    public string? BannerTexto { get; set; }
+    public string? BannerBotao { get; set; }
+    public string? BannerLink { get; set; }
+}
