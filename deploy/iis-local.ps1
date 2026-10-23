@@ -24,6 +24,8 @@
 .EXAMPLE
     .\deploy\iis-local.ps1 -CriarAdmin "vieiraprado@hotmail.com"  # cria o administrador no banco do IIS (pede a senha)
 .EXAMPLE
+    .\deploy\iis-local.ps1 -Docker -CriarBanco               # SQL Server num container Docker (sem instalar SQL Server no Windows)
+.EXAMPLE
     .\deploy\iis-local.ps1 -Remover                            # remove o site e o pool (mantém banco e pastas de dados)
 #>
 [CmdletBinding()]
@@ -36,6 +38,8 @@ param(
     [string] $PastaDados = 'C:\PortalVendasLocal',
     [ValidateSet('Debug', 'Release')] [string] $Configuracao = 'Debug',
     [switch] $CriarBanco,
+    [switch] $Docker,
+    [int] $PortaSql = 14333,
     [string] $CriarAdmin,
     [switch] $NaoAbrirNavegador,
     [switch] $Remover
@@ -79,6 +83,45 @@ if (-not (Get-WebGlobalModule -Name 'AspNetCoreModuleV2' -ErrorAction SilentlyCo
             "Baixe em https://dotnet.microsoft.com/download/dotnet/10.0 (seção ASP.NET Core Runtime > Hosting Bundle),`n" +
             "instale e rode 'iisreset' antes de executar este script de novo.")
 }
+# ------------------------------------------------------------------ SQL Server no Docker (opcional)
+# Com -Docker o banco roda no container "portalvendas-sql" (SQL Server 2022 Developer), com usuário e senha do SQL:
+# o site do IIS não consegue entrar no container com o login do Windows.
+$senhaSa = $null
+if ($Docker) {
+    Passo "SQL Server no Docker (localhost,$PortaSql)"
+    if (-not (Get-Command docker -ErrorAction SilentlyContinue)) { Falhar 'Docker não encontrado. Instale o Docker Desktop (winget install Docker.DockerDesktop) e abra-o.' }
+    & docker info *> $null
+    if ($LASTEXITCODE -ne 0) { Falhar 'O Docker Desktop não está rodando. Abra o Docker Desktop, espere "Engine running" e rode de novo.' }
+    if (-not (Test-Path $PastaDados)) { New-Item -ItemType Directory -Path $PastaDados | Out-Null }
+    $arquivoSenha = Join-Path $PastaDados 'sql-sa.txt'
+    $existe = (& docker ps -a --filter 'name=^portalvendas-sql$' --format '{{.Names}}') -eq 'portalvendas-sql'
+    if (Test-Path $arquivoSenha) {
+        $seguro = ConvertTo-SecureString (Get-Content $arquivoSenha)   # cifrada com DPAPI (só o seu usuário lê)
+        $senhaSa = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($seguro))
+    } elseif ($existe) {
+        Falhar ("O container portalvendas-sql existe, mas a senha não está em $arquivoSenha.`n" +
+                "Para recriar do zero: docker rm -f portalvendas-sql ; docker volume rm portalvendas-sql-dados")
+    } else {
+        $senhaSa = 'Pv#' + [Guid]::NewGuid().ToString('N').Substring(0, 16) + 'aZ9'
+        ConvertTo-SecureString $senhaSa -AsPlainText -Force | ConvertFrom-SecureString | Set-Content $arquivoSenha
+    }
+    if (-not $existe) {
+        Ok 'Baixando a imagem do SQL Server na primeira vez (cerca de 1,5 GB)...'
+        & docker run -d --name portalvendas-sql --restart unless-stopped -e ACCEPT_EULA=Y -e "MSSQL_SA_PASSWORD=$senhaSa" `
+            -e MSSQL_PID=Developer -p "${PortaSql}:1433" -v portalvendas-sql-dados:/var/opt/mssql `
+            mcr.microsoft.com/mssql/server:2022-latest | Out-Null
+        if ($LASTEXITCODE -ne 0) { Falhar 'Não foi possível criar o container do SQL Server (veja a mensagem do Docker acima).' }
+    } else {
+        & docker start portalvendas-sql | Out-Null
+    }
+    $Servidor = "localhost,$PortaSql"
+}
+
+function Conexao([string] $banco) {
+    if ($senhaSa) { return "Server=$Servidor;Database=$banco;User ID=sa;Password=$senhaSa;Encrypt=True;TrustServerCertificate=True;Connect Timeout=8" }
+    return "Server=$Servidor;Database=$banco;Integrated Security=True;Encrypt=True;TrustServerCertificate=True;Connect Timeout=8"
+}
+
 if ($Servidor -like '(localdb)*') {
     Falhar ("O IIS não acessa o LocalDB (ele pertence ao seu usuário do Windows).`n" +
             "Use uma instância do SQL Server: -Servidor localhost ou -Servidor localhost\SQLEXPRESS.`n" +
@@ -87,17 +130,29 @@ if ($Servidor -like '(localdb)*') {
 
 # ------------------------------------------------------------------ banco
 Passo "Banco '$Banco' em '$Servidor'"
-try {
-    $teste = New-Object System.Data.SqlClient.SqlConnection("Server=$Servidor;Database=master;Integrated Security=True;Encrypt=True;TrustServerCertificate=True;Connect Timeout=8")
-    $teste.Open(); $teste.Dispose()
-} catch {
-    Falhar ("Não consegui conectar no SQL Server '$Servidor': $($_.Exception.Message)`n" +
-            "Confira o nome da instância no SSMS (ex.: localhost\SQLEXPRESS) e use -Servidor. Sem SQL Server instalado,`n" +
-            "instale o SQL Server 2022 Developer (gratuito) - veja docs\10-ambiente-local.md.")
+$tentativas = 1
+if ($senhaSa) { $tentativas = 30 }   # o container leva alguns segundos para aceitar conexões
+$conectou = $false
+for ($i = 1; $i -le $tentativas -and -not $conectou; $i++) {
+    try {
+        $teste = New-Object System.Data.SqlClient.SqlConnection((Conexao 'master'))
+        $teste.Open(); $teste.Dispose(); $conectou = $true
+    } catch {
+        $erroConexao = $_.Exception.Message
+        if ($i -lt $tentativas) { Start-Sleep -Seconds 3 }
+    }
+}
+if (-not $conectou) {
+    $_ = $null
+    Falhar ("Não consegui conectar no SQL Server '$Servidor': $erroConexao`n" +
+            "Confira o nome da instância no SSMS (ex.: localhost\SQLEXPRESS) e use -Servidor.`n" +
+            "Sem SQL Server instalado, use o Docker: .\rodar-iis-local.cmd -Docker -CriarBanco")
 }
 $deployDb = Join-Path $raiz 'db\deploy-db.ps1'
-if ($CriarBanco) { & $deployDb -Servidor $Servidor -Banco $Banco -CriarBanco -ComSeed }
-else { & $deployDb -Servidor $Servidor -Banco $Banco }
+$argsDb = @{ Servidor = $Servidor; Banco = $Banco }
+if ($senhaSa) { $argsDb.Credencial = New-Object System.Management.Automation.PSCredential('sa', (ConvertTo-SecureString $senhaSa -AsPlainText -Force)) }
+if ($CriarBanco) { & $deployDb @argsDb -CriarBanco -ComSeed }
+else { & $deployDb @argsDb }
 
 # ------------------------------------------------------------------ pastas
 Passo 'Pastas'
@@ -176,7 +231,13 @@ $segredos = & dotnet user-secrets list --project $projeto 2>$null
 foreach ($linha in $segredos) {
     if ($linha -match '^(.+?) = (.*)$' -and $Matches[1] -notlike 'ConnectionStrings:*') { Definir $config $Matches[1] $Matches[2] }
 }
-Definir $config 'ConnectionStrings:PortalVendas' "Server=$Servidor;Database=$Banco;Trusted_Connection=True;Encrypt=True;TrustServerCertificate=True;Application Name=PortalVendas.IIS"
+# Docker: login SQL próprio do site (senha nova a cada execução). Sem Docker: login do Windows do Application Pool.
+$senhaApp = 'App#' + [Guid]::NewGuid().ToString('N').Substring(0, 20) + 'Q7'
+if ($senhaSa) {
+    Definir $config 'ConnectionStrings:PortalVendas' "Server=$Servidor;Database=$Banco;User ID=portalvendas_app;Password=$senhaApp;Encrypt=True;TrustServerCertificate=True;Application Name=PortalVendas.IIS"
+} else {
+    Definir $config 'ConnectionStrings:PortalVendas' "Server=$Servidor;Database=$Banco;Trusted_Connection=True;Encrypt=True;TrustServerCertificate=True;Application Name=PortalVendas.IIS"
+}
 Definir $config 'Loja:UrlBase' $url
 Definir $config 'Licenca:Arquivo' "$PastaDados\licenca.lic"
 Definir $config 'Imagens:Pasta' "$PastaDados\imagens"
@@ -193,18 +254,24 @@ icacls "$PastaSite\logs" /grant "${IdentidadePool}:(OI)(CI)M" /Q | Out-Null
 icacls $PastaDados /grant "${IdentidadePool}:(OI)(CI)M" /Q | Out-Null
 Ok "$IdentidadePool pode ler o site e gravar em logs e em $PastaDados."
 
+if ($senhaSa) { $loginApp = 'portalvendas_app' } else { $loginApp = $IdentidadePool }
+if ($senhaSa) {
+    $criarLogin = "IF SUSER_ID(N'$loginApp') IS NULL CREATE LOGIN [$loginApp] WITH PASSWORD = N'$senhaApp', CHECK_POLICY = OFF; ELSE ALTER LOGIN [$loginApp] WITH PASSWORD = N'$senhaApp';"
+} else {
+    $criarLogin = "IF SUSER_ID(N'$loginApp') IS NULL CREATE LOGIN [$loginApp] FROM WINDOWS;"
+}
 $sqlLogin = @"
-IF SUSER_ID(N'$IdentidadePool') IS NULL CREATE LOGIN [$IdentidadePool] FROM WINDOWS;
+$criarLogin
 USE [$Banco];
-IF USER_ID(N'$IdentidadePool') IS NULL CREATE USER [$IdentidadePool] FOR LOGIN [$IdentidadePool];
-ALTER ROLE db_datareader ADD MEMBER [$IdentidadePool];
-ALTER ROLE db_datawriter ADD MEMBER [$IdentidadePool];
-GRANT EXECUTE TO [$IdentidadePool];
+IF USER_ID(N'$loginApp') IS NULL CREATE USER [$loginApp] FOR LOGIN [$loginApp];
+ALTER ROLE db_datareader ADD MEMBER [$loginApp];
+ALTER ROLE db_datawriter ADD MEMBER [$loginApp];
+GRANT EXECUTE TO [$loginApp];
 "@
-$cn = New-Object System.Data.SqlClient.SqlConnection("Server=$Servidor;Database=master;Integrated Security=True;Encrypt=True;TrustServerCertificate=True")
+$cn = New-Object System.Data.SqlClient.SqlConnection((Conexao 'master'))
 $cn.Open()
 try { $cmd = $cn.CreateCommand(); $cmd.CommandText = $sqlLogin; [void] $cmd.ExecuteNonQuery() } finally { $cn.Dispose() }
-Ok "Login '$IdentidadePool' com leitura e gravação no banco $Banco."
+Ok "Login '$loginApp' com leitura e gravação no banco $Banco."
 
 # ------------------------------------------------------------------ administrador (opcional)
 if ($CriarAdmin) {
@@ -226,6 +293,9 @@ for ($i = 1; $i -le 15 -and -not $saudavel; $i++) {
 if ($saudavel) { Ok "No ar: $url  (painel: $url/admin)" }
 else {
     Write-Host "    O /health não respondeu. Veja $PastaSite\logs e o Visualizador de Eventos (Aplicativo, fonte IIS AspNetCore Module V2)." -ForegroundColor Yellow
+}
+if ($senhaSa) {
+    Write-Host "    SSMS: servidor localhost,$PortaSql · Autenticação do SQL Server · login sa · senha $senhaSa (guardada em $PastaDados\sql-sa.txt)" -ForegroundColor Gray
 }
 Write-Host "    Depurar: Visual Studio > Depurar > Anexar ao Processo (Ctrl+Alt+P) > w3wp.exe ($IdentidadePool)." -ForegroundColor Gray
 if (-not $NaoAbrirNavegador) { Start-Process $url }

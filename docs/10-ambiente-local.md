@@ -25,7 +25,10 @@ Há duas formas de rodar o portal localmente. Use a primeira no dia a dia e a se
 1. **IIS**: "Ativar ou desativar recursos do Windows" → Serviços de Informações da Internet (com Ferramentas de Gerenciamento da Web).
 2. **ASP.NET Core Hosting Bundle 10**: https://dotnet.microsoft.com/download/dotnet/10.0 → *ASP.NET Core Runtime* → *Hosting Bundle*. Depois rode `iisreset`.
 3. **SQL Server** (o IIS não acessa o LocalDB): se o SSMS conecta em `localhost` ou `localhost\SQLEXPRESS`, já serve.
-   Se não tiver, instale o SQL Server 2022 **Developer** (gratuito) ou Express.
+   Se não tiver, a forma mais simples é o **Docker** (o instalador do SQL Server costuma falhar em Windows em português):
+   `.\rodar-iis-local.cmd -Docker -CriarBanco` cria o container `portalvendas-sql` (SQL Server 2022 Developer) na porta 14333,
+   com senha gerada e guardada cifrada em `C:\PortalVendasLocal\sql-sa.txt`; o site usa um login SQL próprio (`portalvendas_app`).
+   No SSMS: servidor `localhost,14333`, *Autenticação do SQL Server*, login `sa` (a senha aparece no fim do script).
 
 ### Rodar
 
@@ -41,6 +44,7 @@ Depois, a cada alteração no código, rode de novo sem parâmetros (republica e
 | Parâmetro | Para quê |
 |---|---|
 | `-Servidor "localhost\SQLEXPRESS"` | outra instância do SQL Server |
+| `-Docker` | usar o SQL Server no container Docker (use sempre, depois da primeira vez) |
 | `-Configuracao Release` | publicar otimizado (padrão Debug, para depurar) |
 | `-PortaHttps 9443 -PortaHttp 9080` | se 8443/8080 estiverem ocupadas |
 | `-Remover` | apaga o site e o pool do IIS (mantém banco e dados) |
