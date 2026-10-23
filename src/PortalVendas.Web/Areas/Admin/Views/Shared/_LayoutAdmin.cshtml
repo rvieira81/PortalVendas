@@ -1,5 +1,12 @@
 @inject PortalVendas.Application.Licenciamento.ILicencaLoja Licenca
+@inject PortalVendas.Application.WhatsApp.ConversasWhatsAppService Conversas
 @{
+    var aguardandoAtendente = 0;
+    if (Licenca.Estado.TemModulo(PortalVendas.Application.Licenciamento.ModulosLicenca.WhatsApp))
+    {
+        try { aguardandoAtendente = await Conversas.ContarAguardandoAtendenteAsync(Context.RequestAborted); }
+        catch (Exception ex) when (ex is not OperationCanceledException) { }
+    }
     var nomeLoja = Licenca.Estado.Ativa ? Licenca.Estado.Dados!.NomeLoja : PortalVendas.Application.Admin.IdentidadeLojaService.NomeDemonstracao;
     var controlador = ViewContext.RouteData.Values["controller"]?.ToString();
     string Ativo(string c) => string.Equals(controlador, c, StringComparison.OrdinalIgnoreCase) ? "active" : "";
@@ -30,6 +37,15 @@
                     <li class="nav-item"><a class="nav-link @Ativo("Categorias")" href="/admin/categorias">Categorias</a></li>
                     <li class="nav-item"><a class="nav-link @Ativo("Frete")" href="/admin/frete">Frete e pagamento</a></li>
                     <li class="nav-item"><a class="nav-link @Ativo("Identidade")" href="/admin/identidade">Identidade da loja</a></li>
+                    <li class="nav-item">
+                        <a class="nav-link @Ativo("WhatsApp")" href="/admin/whatsapp">
+                            WhatsApp
+                            @if (aguardandoAtendente > 0)
+                            {
+                                <span class="badge rounded-pill text-bg-success" title="Conversas esperando atendente">@aguardandoAtendente</span>
+                            }
+                        </a>
+                    </li>
                 </ul>
                 <span class="navbar-text small me-3">@User.Autor()</span>
                 <a class="btn btn-sm btn-outline-light me-2" href="/" target="_blank">Ver loja</a>

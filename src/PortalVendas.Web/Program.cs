@@ -119,6 +119,8 @@ try
             _ => new FixedWindowRateLimiterOptions { PermitLimit = 10, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
         o.AddPolicy("consulta", c => RateLimitPartition.GetFixedWindowLimiter(Ip(c),
             _ => new FixedWindowRateLimiterOptions { PermitLimit = 30, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+        o.AddPolicy("whatsapp", c => RateLimitPartition.GetFixedWindowLimiter(Ip(c),
+            _ => new FixedWindowRateLimiterOptions { PermitLimit = 600, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
         o.AddPolicy("webhook", c => RateLimitPartition.GetFixedWindowLimiter(Ip(c),
             _ => new FixedWindowRateLimiterOptions { PermitLimit = 120, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
     });

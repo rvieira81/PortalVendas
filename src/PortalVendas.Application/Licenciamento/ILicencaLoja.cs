@@ -17,6 +17,8 @@ public sealed record DadosLicenca
     public DateTime? ExpiraEm { get; init; }
     /// <summary>Até quando a loja tem direito a novas versões (informativo).</summary>
     public DateTime? AtualizacoesAte { get; init; }
+    /// <summary>Módulos pagos liberados para esta loja (ex.: "whatsapp"). Licenças antigas vêm sem a lista.</summary>
+    public IReadOnlyList<string>? Modulos { get; init; }
 }
 
 public enum SituacaoLicenca
@@ -31,6 +33,18 @@ public enum SituacaoLicenca
 public sealed record EstadoLicenca(SituacaoLicenca Situacao, string Mensagem, DadosLicenca? Dados)
 {
     public bool Ativa => Situacao == SituacaoLicenca.Valida;
+
+    /// <summary>O módulo está na licença e a licença está válida (sem licença não há módulo pago, nem em demonstração).</summary>
+    public bool TemModulo(string modulo) =>
+        Ativa && Dados?.Modulos is { } modulos && modulos.Any(m => string.Equals(m, modulo, StringComparison.OrdinalIgnoreCase));
+}
+
+/// <summary>Módulos vendidos à parte.</summary>
+public static class ModulosLicenca
+{
+    public const string WhatsApp = "whatsapp";
+
+    public static readonly IReadOnlyList<string> Todos = new[] { WhatsApp };
 }
 
 /// <summary>Licença da instalação. O nome, a razão social e o CNPJ da loja vêm daqui e não podem ser editados no painel.</summary>

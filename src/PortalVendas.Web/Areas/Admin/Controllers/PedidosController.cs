@@ -13,16 +13,18 @@ public class PedidosController : AdminControllerBase
     public PedidosController(PedidoService pedidos) => _pedidos = pedidos;
 
     /// <summary>RF18: lista com filtro por status, período e cliente/número.</summary>
-    public async Task<IActionResult> Index(StatusPedido? status, string? de, string? ate, string? termo, int pagina = 1, CancellationToken ct = default)
+    public async Task<IActionResult> Index(StatusPedido? status, string? de, string? ate, string? termo, OrigemPedido? origem, int pagina = 1,
+        CancellationToken ct = default)
     {
-        var filtro = new FiltroPedidosAdmin(status, LerData(de), LerData(ate), termo, pagina);
+        var filtro = new FiltroPedidosAdmin(status, LerData(de), LerData(ate), termo, pagina, origem);
         return View(new PedidosAdminIndexViewModel
         {
             Pedidos = await _pedidos.ListarAdminAsync(filtro, ct),
             Status = status,
             De = de,
             Ate = ate,
-            Termo = termo
+            Termo = termo,
+            Origem = origem
         });
     }
 

@@ -691,3 +691,14 @@ body.mini-aberto { overflow: hidden; }
 .paleta { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: .5rem; }
 .paleta-cor { width: 34px; height: 34px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1px var(--pv-borda); padding: 0; }
 .paleta-cor:hover { box-shadow: 0 0 0 2px var(--pv-foco); }
+
+/* ---- painel: conversas do WhatsApp */
+.conversa-avatar { width: 40px; height: 40px; border-radius: 50%; background: #DCF3E5; color: #1E7F55; display: grid; place-items: center; font-weight: 700; flex: none; }
+.min-w-0 { min-width: 0; }
+.conversa-chat { background: #EFEAE2; max-height: 62vh; overflow-y: auto; display: flex; flex-direction: column; gap: .5rem; padding: 1rem; }
+.balao { max-width: 78%; padding: .5rem .75rem; border-radius: 12px; box-shadow: 0 1px 1px rgba(0, 0, 0, .08); font-size: .92rem; }
+.balao-texto { white-space: pre-wrap; word-break: break-word; }
+.balao-rodape { font-size: .72rem; color: #667781; text-align: right; margin-top: .2rem; }
+.balao-cliente { align-self: flex-start; background: #fff; border-top-left-radius: 2px; }
+.balao-robo { align-self: flex-end; background: #E7F0FD; border-top-right-radius: 2px; }
+.balao-atendente { align-self: flex-end; background: #D9FDD3; border-top-right-radius: 2px; }

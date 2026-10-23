@@ -33,6 +33,7 @@ Loja virtual de um vendedor: vitrine, carrinho, cadastro com CPF, endereço por 
 | 5 Testes | tests/ (97 casos), docs/05-testes.md | 97/97 passando; roteiro manual pendente |
 | 6 Implantação | deploy/*.ps1, web.config, CI, docs/06-implantacao.md | Pronto |
 | 7 Entrega | README.md, docs/07-manual.md | Pronto |
+| 9 Módulo WhatsApp | Robô de vendas (Meta Cloud API ou Evolution), IA opcional, Pix na conversa, painel de conversas, pedidos com origem, V002, docs/09-whatsapp.md | Implementado — aguardando compilação local |
 | 8 Produto revendável | Licença assinada (tools/PortalVendas.Licenciador), Identidade da loja no painel, vitrine v2 (banner, seções, mini carrinho, frete na página do produto), docs/08-licenciamento.md | Implementado — aguardando compilação local |
 
 ## Pendências / riscos abertos

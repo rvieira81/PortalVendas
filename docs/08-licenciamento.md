@@ -7,6 +7,7 @@ emitido pelo fornecedor (Prado). A licença define o que o comprador **não** po
 |---|---|
 | Nome da loja, razão social, CNPJ | Logo, cor principal e cor de destaque |
 | Domínios em que a loja pode funcionar | WhatsApp, telefone, e-mail, endereço, horário |
+| Módulos pagos (ex.: vendas pelo WhatsApp) | Configuração do WhatsApp (provedor, robô, IA) |
 | Validade (opcional) e direito a atualizações | Redes sociais, faixa de aviso, banner da página inicial |
 
 ## Como funciona
@@ -47,6 +48,7 @@ dotnet run --project tools/PortalVendas.Licenciador -- emitir `
 
 - `--expira aaaa-mm-dd` cria licença com vencimento (assinatura mensal/anual). Sem ele, a licença é perpétua.
 - `--dominio *.cliente.com.br` libera todos os subdomínios.
+- `--modulo whatsapp` libera o módulo de vendas pelo WhatsApp (ver [09-whatsapp.md](09-whatsapp.md)). Sem ele, o módulo fica bloqueado.
 - O CNPJ é conferido (aceita também o CNPJ alfanumérico da Receita).
 - Conferir um arquivo: `dotnet run --project tools/PortalVendas.Licenciador -- verificar --arquivo C:\Licencas\pradoshop.lic`
 

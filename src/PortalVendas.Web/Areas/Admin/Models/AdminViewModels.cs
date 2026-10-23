@@ -98,6 +98,7 @@ public class ProdutoEdicaoViewModel
 
 public class PedidosAdminIndexViewModel
 {
+    public PortalVendas.Domain.Pedidos.OrigemPedido? Origem { get; init; }
     public required Pagina<PedidoAdminResumo> Pedidos { get; init; }
     public StatusPedido? Status { get; init; }
     public string? De { get; init; }
@@ -165,4 +166,52 @@ public class IdentidadeInput
     public string? BannerTexto { get; set; }
     public string? BannerBotao { get; set; }
     public string? BannerLink { get; set; }
+}
+
+public class WhatsAppIndexViewModel
+{
+    public required PortalVendas.Application.Comum.Pagina<PortalVendas.Application.WhatsApp.ConversaResumo> Conversas { get; init; }
+    public bool SomenteAtendente { get; init; }
+    public string? Termo { get; init; }
+    public bool Configurado { get; init; }
+    public bool RoboAtivo { get; init; }
+}
+
+public class WhatsAppConfiguracaoViewModel
+{
+    public PortalVendas.Application.WhatsApp.ProvedorWhatsApp Provedor { get; init; }
+    public bool RoboAtivo { get; init; }
+    public string? BoasVindas { get; init; }
+    public string? MetaPhoneNumberId { get; init; }
+    public bool MetaTemToken { get; init; }
+    public bool MetaTemAppSecret { get; init; }
+    public string? MetaModeloAviso { get; init; }
+    public string MetaIdiomaModelo { get; init; } = "pt_BR";
+    public string? EvolutionUrl { get; init; }
+    public string? EvolutionInstancia { get; init; }
+    public bool EvolutionTemApiKey { get; init; }
+    public bool IaAtiva { get; init; }
+    public bool IaTemChave { get; init; }
+    public string IaModelo { get; init; } = string.Empty;
+    public string UrlWebhookMeta { get; init; } = string.Empty;
+    public string MetaVerifyToken { get; init; } = string.Empty;
+    public string UrlWebhookEvolution { get; init; } = string.Empty;
+}
+
+public class ConfiguracaoWhatsAppInput
+{
+    public PortalVendas.Application.WhatsApp.ProvedorWhatsApp Provedor { get; set; }
+    public bool RoboAtivo { get; set; }
+    public string? BoasVindas { get; set; }
+    public string? MetaPhoneNumberId { get; set; }
+    public string? MetaToken { get; set; }
+    public string? MetaAppSecret { get; set; }
+    public string? MetaModeloAviso { get; set; }
+    public string? MetaIdiomaModelo { get; set; }
+    public string? EvolutionUrl { get; set; }
+    public string? EvolutionInstancia { get; set; }
+    public string? EvolutionApiKey { get; set; }
+    public bool IaAtiva { get; set; }
+    public string? IaChaveApi { get; set; }
+    public string? IaModelo { get; set; }
 }

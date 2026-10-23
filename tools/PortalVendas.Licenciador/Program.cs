@@ -9,7 +9,7 @@ using PortalVendas.Infrastructure.Licenciamento;
 //   licenciador chaves    --saida C:\Licencas\chave-privada.pem
 //   licenciador emitir    --chave C:\Licencas\chave-privada.pem --nome "Prado Shop" --razao "Prado Shop Comércio Ltda."
 //                         --cnpj 12.345.678/0001-95 --dominio pradoshop.com.br --dominio www.pradoshop.com.br
-//                         [--expira 2027-12-31] [--atualizacoes-ate 2027-12-31] --saida licenca.lic
+//                         [--modulo whatsapp] [--expira 2027-12-31] [--atualizacoes-ate 2027-12-31] --saida licenca.lic
 //   licenciador verificar --arquivo licenca.lic [--publica <base64>]
 //
 // A chave privada NUNCA vai para o repositório nem para o cliente: guarde-a fora da pasta do projeto, com backup.
@@ -76,6 +76,11 @@ static int Emitir(Dictionary<string, List<string>> o)
     if (dominios.Any(d => d.Contains('/') || d.Contains(':')))
         return Erro("Domínio é só o nome (ex.: www.minhaloja.com.br), sem https:// nem porta.");
     var saida = Um(o, "saida") ?? "licenca.lic";
+    var modulos = (o.GetValueOrDefault("modulo") ?? new List<string>())
+        .Select(m => m.Trim().ToLowerInvariant()).Where(m => m.Length > 0).Distinct().ToList();
+    var desconhecidos = modulos.Except(ModulosLicenca.Todos).ToList();
+    if (desconhecidos.Count > 0)
+        return Erro($"Módulo desconhecido: {string.Join(", ", desconhecidos)}. Disponíveis: {string.Join(", ", ModulosLicenca.Todos)}.");
 
     var dados = new DadosLicenca
     {
@@ -87,7 +92,8 @@ static int Emitir(Dictionary<string, List<string>> o)
         Dominios = dominios,
         EmitidaEm = DateTime.UtcNow,
         ExpiraEm = Data(Um(o, "expira")),
-        AtualizacoesAte = Data(Um(o, "atualizacoes-ate"))
+        AtualizacoesAte = Data(Um(o, "atualizacoes-ate")),
+        Modulos = modulos
     };
 
     using var ecdsa = ECDsa.Create();
@@ -154,7 +160,7 @@ static void Ajuda() => Console.WriteLine("""
 
       chaves     --saida <chave-privada.pem>        gera o par de chaves (uma vez só)
       emitir     --chave <pem> --nome <nome> --razao <razão social> --cnpj <cnpj>
-                 --dominio <dominio> [--dominio ...] [--expira aaaa-mm-dd]
+                 --dominio <dominio> [--dominio ...] [--modulo whatsapp] [--expira aaaa-mm-dd]
                  [--atualizacoes-ate aaaa-mm-dd] [--saida licenca.lic]
       verificar  --arquivo licenca.lic [--publica <base64>]
 

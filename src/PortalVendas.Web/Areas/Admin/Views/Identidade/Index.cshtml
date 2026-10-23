@@ -35,6 +35,8 @@
                     <dd class="col-8">@(dados is null ? "somente localhost (demonstração)" : string.Join(", ", dados.Dominios))</dd>
                     <dt class="col-4">Validade</dt>
                     <dd class="col-8">@(dados?.ExpiraEm is { } exp ? exp.ToString("dd/MM/yyyy") : dados is null ? "—" : "sem vencimento")</dd>
+                    <dt class="col-4">Módulos</dt>
+                    <dd class="col-8">@(dados?.Modulos is { Count: > 0 } mods ? string.Join(", ", mods.Select(m => m == "whatsapp" ? "WhatsApp" : m)) : "—")</dd>
                     @if (dados?.AtualizacoesAte is { } atu)
                     {
                         <dt class="col-4">Atualizações</dt><dd class="col-8">até @atu.ToString("dd/MM/yyyy")</dd>

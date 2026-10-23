@@ -12,6 +12,8 @@ Loja virtual de um vendedor em **C# / ASP.NET Core MVC (.NET 10)** com **SQL Ser
 | [docs/06-implantacao.md](docs/06-implantacao.md) | IIS, segredos, publicação, rollback e go-live |
 | [docs/07-manual.md](docs/07-manual.md) | Manual do cliente e do administrador |
 | [docs/08-licenciamento.md](docs/08-licenciamento.md) | Licença por loja (nome, CNPJ, domínio) e identidade visual |
+| [docs/09-whatsapp.md](docs/09-whatsapp.md) | Módulo de vendas e atendimento pelo WhatsApp (Meta ou Evolution, IA opcional) |
+| [docs/10-ambiente-local.md](docs/10-ambiente-local.md) | Rodar na sua máquina: Visual Studio, IIS local (`rodar-iis-local.cmd`) e banco no SSMS |
 
 ## Rodar localmente
 

@@ -98,6 +98,25 @@ public class ContaController : Controller
         return Redirect("/");
     }
 
+    /// <summary>
+    /// Link enviado pelo robô do WhatsApp: entra na conta do cliente (criada na conversa, sem senha)
+    /// e abre o pagamento do pedido para pagar com cartão ou boleto.
+    /// </summary>
+    [HttpGet("acesso-whatsapp")]
+    [EnableRateLimiting("login")]
+    public async Task<IActionResult> AcessoWhatsApp(string? token, int? pedido, CancellationToken ct)
+    {
+        var usuario = await _contas.ValidarAcessoWhatsAppAsync(token, ct);
+        if (usuario is null)
+        {
+            TempData["Erro"] = "Este link expirou. Peça um novo no WhatsApp (escreva \"meus pedidos\") ou entre com sua conta.";
+            return RedirectToAction(nameof(Entrar));
+        }
+        if (User.UsuarioId() is { } atual && atual != usuario.Id) await ServicoSessao.SairAsync(HttpContext);
+        await _sessao.EntrarAsync(HttpContext, usuario, comMfa: false, lembrar: false);
+        return pedido is > 0 ? Redirect($"/pedidos/{pedido}/pagamento") : Redirect("/pedidos");
+    }
+
     [HttpGet("acesso-negado")]
     public IActionResult AcessoNegado()
     {

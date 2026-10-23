@@ -237,4 +237,27 @@
     document.querySelectorAll('input[data-previa]').forEach((c) => c.addEventListener('input', () => {
         if (previa) previa.style.setProperty(c.dataset.previa, c.value);
     }));
+
+    // ------------------------------------------------------------ painel WhatsApp: provedor, histórico e atualização
+    const radiosProvedor = document.querySelectorAll('input[name="Provedor"]');
+    if (radiosProvedor.length) {
+        const ajustar = () => radiosProvedor.forEach((r) => {
+            if (!r.dataset.mostrar) return;
+            const bloco = document.getElementById(r.dataset.mostrar);
+            if (bloco) bloco.hidden = !r.checked;
+        });
+        radiosProvedor.forEach((r) => r.addEventListener('change', ajustar));
+        ajustar();
+    }
+    const chat = document.querySelector('[data-atualizar]');
+    if (chat) {
+        chat.scrollTop = chat.scrollHeight;
+        const resposta = document.getElementById('texto');
+        const segundos = parseInt(chat.dataset.atualizar, 10) || 15;
+        // Recarrega para mostrar mensagens novas, sem atrapalhar quem está digitando
+        setInterval(() => {
+            if (resposta && (resposta.value.trim() !== '' || document.activeElement === resposta)) return;
+            window.location.reload();
+        }, segundos * 1000);
+    }
 })();

@@ -8,20 +8,6 @@ namespace PortalVendas.Tests.Aplicacao;
 
 public class IdentidadeLojaServiceTests
 {
-    private sealed class LicencaFalsa : ILicencaLoja
-    {
-        public EstadoLicenca Estado { get; set; } = new(SituacaoLicenca.Demonstracao, "sem licença", null);
-        public bool HostAutorizado(string host, bool requisicaoLocal) => requisicaoLocal;
-        public Task<Resultado> InstalarAsync(byte[] conteudo, CancellationToken ct = default) => Task.FromResult(Resultado.Falha("não usado"));
-    }
-
-    private sealed class ImagensFalsas : IArmazenamentoImagens
-    {
-        public List<string> Removidas { get; } = new();
-        public Task<string> SalvarAsync(byte[] conteudo, string extensao, CancellationToken ct = default) => Task.FromResult(Guid.NewGuid().ToString("N") + extensao);
-        public Task RemoverAsync(string arquivo, CancellationToken ct = default) { Removidas.Add(arquivo); return Task.CompletedTask; }
-    }
-
     private static IdentidadeEditavel Editavel(string cor1 = "#12343B", string cor2 = "#F5B82E", string? email = null,
         string? instagram = null, string? link = null) =>
         new(cor1, cor2, "(19) 99999-0000", null, email, "Rua Exemplo, 100", "Seg. a sex., 9h às 18h",

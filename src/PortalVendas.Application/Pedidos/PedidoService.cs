@@ -16,9 +16,11 @@ public record PedidoResumo(int Id, DateTime CriadoEm, StatusPedido Status, decim
     public string Numero => Id.ToString("D6");
 }
 
-public record FiltroPedidosAdmin(StatusPedido? Status = null, DateOnly? De = null, DateOnly? Ate = null, string? Termo = null, int Pagina = 1);
+public record FiltroPedidosAdmin(StatusPedido? Status = null, DateOnly? De = null, DateOnly? Ate = null, string? Termo = null, int Pagina = 1,
+    OrigemPedido? Origem = null);
 
-public record PedidoAdminResumo(int Id, DateTime CriadoEm, string Cliente, StatusPedido Status, decimal Total, string FreteDescricao)
+public record PedidoAdminResumo(int Id, DateTime CriadoEm, string Cliente, StatusPedido Status, decimal Total, string FreteDescricao,
+    OrigemPedido Origem = OrigemPedido.Site)
 {
     public string Numero => Id.ToString("D6");
 }
@@ -99,6 +101,8 @@ public class PedidoService
 
         if (filtro.Status is not null)
             consulta = consulta.Where(x => x.Pedido.Status == filtro.Status);
+        if (filtro.Origem is not null)
+            consulta = consulta.Where(x => x.Pedido.Origem == filtro.Origem);
         if (filtro.De is not null)
         {
             var de = Horario.DeBrasiliaParaUtc(filtro.De.Value.ToDateTime(TimeOnly.MinValue));
@@ -123,7 +127,7 @@ public class PedidoService
             .OrderByDescending(x => x.Pedido.CriadoEm)
             .Skip((pagina - 1) * TamanhoPagina)
             .Take(TamanhoPagina)
-            .Select(x => new PedidoAdminResumo(x.Pedido.Id, x.Pedido.CriadoEm, x.Usuario.Nome, x.Pedido.Status, x.Pedido.Total, x.Pedido.FreteDescricao))
+            .Select(x => new PedidoAdminResumo(x.Pedido.Id, x.Pedido.CriadoEm, x.Usuario.Nome, x.Pedido.Status, x.Pedido.Total, x.Pedido.FreteDescricao, x.Pedido.Origem))
             .ToListAsync(ct);
         return new Pagina<PedidoAdminResumo>(itens, pagina, TamanhoPagina, total);
     }

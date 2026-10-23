@@ -17,6 +17,7 @@ public class Pedido
     public int Id { get; private set; }
     public int UsuarioId { get; private set; }
     public StatusPedido Status { get; private set; }
+    public OrigemPedido Origem { get; private set; } = OrigemPedido.Site;
     public Guid ChaveIdempotencia { get; private set; }
     public decimal Subtotal { get; private set; }
     public decimal ValorFrete { get; private set; }
@@ -54,10 +55,12 @@ public class Pedido
         int fretePrazoDias,
         decimal desconto,
         DateTime agoraUtc,
-        string autor)
+        string autor,
+        OrigemPedido origem = OrigemPedido.Site)
     {
         var pedido = new Pedido
         {
+            Origem = origem,
             UsuarioId = usuarioId,
             ChaveIdempotencia = chaveIdempotencia,
             Status = StatusPedido.AguardandoPagamento,

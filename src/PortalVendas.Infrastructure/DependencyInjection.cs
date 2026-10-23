@@ -15,6 +15,8 @@ using PortalVendas.Infrastructure.Licenciamento;
 using PortalVendas.Application.Licenciamento;
 using PortalVendas.Infrastructure.Pagamentos;
 using PortalVendas.Infrastructure.Servicos;
+using PortalVendas.Infrastructure.WhatsApp;
+using PortalVendas.Application.WhatsApp;
 
 namespace PortalVendas.Infrastructure;
 
@@ -74,6 +76,19 @@ public static class DependencyInjection
         });
 
         services.AddHostedService<ManutencaoJob>();
+
+        // WhatsApp: conectores (Meta/Evolution), IA e fila de mensagens
+        services.AddHttpClient(FabricaConectorWhatsApp.NomeCliente, http => http.Timeout = TimeSpan.FromSeconds(20));
+        services.AddHttpClient(AssistenteClaude.NomeCliente, http =>
+        {
+            http.BaseAddress = new Uri("https://api.anthropic.com/");
+            http.Timeout = TimeSpan.FromSeconds(15);
+        });
+        services.AddScoped<IFabricaConectorWhatsApp, FabricaConectorWhatsApp>();
+        services.AddScoped<IAssistenteVendas, AssistenteClaude>();
+        services.AddSingleton<FilaWhatsApp>();
+        services.AddSingleton<IFilaWhatsApp>(sp => sp.GetRequiredService<FilaWhatsApp>());
+        services.AddHostedService<ProcessadorWhatsAppJob>();
 
         services.AddHealthChecks().AddCheck<BancoHealthCheck>("banco", HealthStatus.Unhealthy, new[] { "pronto" });
         return services;
