@@ -10,6 +10,12 @@
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
+    "IIS local (publicar)": {
+      "commandName": "Executable",
+      "executablePath": "cmd.exe",
+      "commandLineArgs": "/c \"$(ProjectDir)..\\..\\rodar-iis-local.cmd\"",
+      "workingDirectory": "$(ProjectDir)"
+    },
     "IIS Express": {
       "commandName": "IISExpress",
       "launchBrowser": true,

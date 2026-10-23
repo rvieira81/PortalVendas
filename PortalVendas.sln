@@ -7,6 +7,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{68040DF9-859
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{F90FCC72-C8F3-4F56-8F04-13C70A949306}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tools", "tools", "{A1D3C0DE-7B21-4E8A-9C11-2F6B3A9E5D01}"
+EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{C48EDFB8-335B-4E8E-981F-401A801707AE}"
 	ProjectSection(SolutionItems) = preProject
 		Directory.Build.props = Directory.Build.props
@@ -25,6 +27,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PortalVendas.Web", "src\PortalVendas.Web\PortalVendas.Web.csproj", "{7348268C-1705-4AD8-ADB2-56EF87408565}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PortalVendas.Tests", "tests\PortalVendas.Tests\PortalVendas.Tests.csproj", "{BF91546D-9C1B-4B36-8C87-6FD5E267F3AF}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PortalVendas.Licenciador", "tools\PortalVendas.Licenciador\PortalVendas.Licenciador.csproj", "{B7E2F4A9-3C55-4D19-8E60-5A1C2D3E4F02}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -52,6 +56,10 @@ Global
 		{BF91546D-9C1B-4B36-8C87-6FD5E267F3AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BF91546D-9C1B-4B36-8C87-6FD5E267F3AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BF91546D-9C1B-4B36-8C87-6FD5E267F3AF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B7E2F4A9-3C55-4D19-8E60-5A1C2D3E4F02}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B7E2F4A9-3C55-4D19-8E60-5A1C2D3E4F02}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B7E2F4A9-3C55-4D19-8E60-5A1C2D3E4F02}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B7E2F4A9-3C55-4D19-8E60-5A1C2D3E4F02}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -62,5 +70,6 @@ Global
 		{5A549E6F-9B46-4124-B904-1396738C3FC1} = {68040DF9-8590-4192-A3BC-1601462323A5}
 		{7348268C-1705-4AD8-ADB2-56EF87408565} = {68040DF9-8590-4192-A3BC-1601462323A5}
 		{BF91546D-9C1B-4B36-8C87-6FD5E267F3AF} = {F90FCC72-C8F3-4F56-8F04-13C70A949306}
+		{B7E2F4A9-3C55-4D19-8E60-5A1C2D3E4F02} = {A1D3C0DE-7B21-4E8A-9C11-2F6B3A9E5D01}
 	EndGlobalSection
 EndGlobal

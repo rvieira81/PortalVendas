@@ -16,7 +16,7 @@ public class HashSenha : IHashSenha
 
     public VerificacaoSenha Verificar(string hash, string senha)
     {
-        if (string.IsNullOrEmpty(hash) || hash == "!") return VerificacaoSenha.Falha;
+        if (string.IsNullOrEmpty(hash) || hash.StartsWith('!')) return VerificacaoSenha.Falha;   // "!" = conta anonimizada ou criada no WhatsApp (sem senha)
         try
         {
             return _hasher.VerifyHashedPassword(Nenhum, hash, senha) switch

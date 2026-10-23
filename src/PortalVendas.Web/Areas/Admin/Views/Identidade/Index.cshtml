@@ -1,0 +1,195 @@
+@using PortalVendas.Application.Licenciamento
+@model IdentidadeAdminViewModel
+@{
+    ViewData["Title"] = "Identidade da loja";
+    var i = Model.Identidade;
+    var lic = Model.Licenca;
+    var dados = lic.Dados;
+    var (classeSituacao, textoSituacao) = lic.Situacao switch
+    {
+        SituacaoLicenca.Valida => ("text-bg-success", "Licença válida"),
+        SituacaoLicenca.Expirada => ("text-bg-danger", "Licença expirada"),
+        SituacaoLicenca.Invalida => ("text-bg-danger", "Licença inválida"),
+        _ => ("text-bg-warning", "Demonstração (sem licença)")
+    };
+    string[] principais = { "#12343B", "#1F2A44", "#3B1F4A", "#202020", "#14532D", "#7F1D1D" };
+    string[] destaques = { "#F5B82E", "#FF8A3D", "#7ED6A5", "#9BC4FF", "#F9A8D4", "#FDE68A" };
+}
+<h1 class="h3 mb-1">Identidade da loja</h1>
+<p class="text-secondary mb-4">Logo, cores, contatos e banner da página inicial. A loja inteira muda ao salvar: topo, rodapé e botões.</p>
+
+<div class="row g-4">
+    <div class="col-xl-5">
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <h2 class="h6 mb-0">🔒 Dados da licença</h2>
+                    <span class="badge @classeSituacao">@textoSituacao</span>
+                </div>
+                <p class="small text-secondary">Definidos pelo fornecedor do sistema. Para alterar nome, razão social, CNPJ ou domínio, solicite uma nova licença.</p>
+                <dl class="row small mb-0 licenca-dados">
+                    <dt class="col-4">Nome da loja</dt><dd class="col-8">@(dados?.NomeLoja ?? i.NomeLoja)</dd>
+                    <dt class="col-4">Razão social</dt><dd class="col-8">@(dados?.RazaoSocial ?? i.RazaoSocial)</dd>
+                    <dt class="col-4">CNPJ</dt><dd class="col-8">@(dados is null ? i.CnpjFormatado : Cnpj.Formatar(dados.Cnpj))</dd>
+                    <dt class="col-4">Domínios</dt>
+                    <dd class="col-8">@(dados is null ? "somente localhost (demonstração)" : string.Join(", ", dados.Dominios))</dd>
+                    <dt class="col-4">Validade</dt>
+                    <dd class="col-8">@(dados?.ExpiraEm is { } exp ? exp.ToString("dd/MM/yyyy") : dados is null ? "—" : "sem vencimento")</dd>
+                    <dt class="col-4">Módulos</dt>
+                    <dd class="col-8">@(dados?.Modulos is { Count: > 0 } mods ? string.Join(", ", mods.Select(m => m == "whatsapp" ? "WhatsApp" : m)) : "—")</dd>
+                    @if (dados?.AtualizacoesAte is { } atu)
+                    {
+                        <dt class="col-4">Atualizações</dt><dd class="col-8">até @atu.ToString("dd/MM/yyyy")</dd>
+                    }
+                    @if (dados is not null)
+                    {
+                        <dt class="col-4">Nº da licença</dt><dd class="col-8"><code>@dados.Id.ToString("N")[..12]</code></dd>
+                    }
+                </dl>
+                @if (!lic.Ativa)
+                {
+                    <div class="alert alert-warning small mt-3 mb-0">@lic.Mensagem Enquanto isso a vitrine só abre em <code>localhost</code>, no próprio servidor.</div>
+                }
+                <form method="post" action="/admin/identidade/instalarlicenca" enctype="multipart/form-data" asp-antiforgery="true" class="mt-3">
+                    <label for="licenca" class="form-label small fw-semibold">Instalar arquivo de licença (.lic)</label>
+                    <div class="input-group">
+                        <input id="licenca" name="arquivo" type="file" accept=".lic" class="form-control" required />
+                        <button class="btn btn-outline-primary">Instalar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <h2 class="h6">Logo</h2>
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    @if (string.IsNullOrEmpty(i.Logo))
+                    {
+                        <span class="logo-previa" style="background:@i.CorDestaque;color:@i.CorPrincipal">@i.Inicial</span>
+                        <span class="small text-secondary">Sem logo, a loja usa a inicial do nome.</span>
+                    }
+                    else
+                    {
+                        <img src="@Formatacao.UrlImagem(i.Logo)" alt="Logo atual" class="logo-previa-img" style="background:@i.CorPrincipal" />
+                        <form method="post" action="/admin/identidade/removerlogo" asp-antiforgery="true">
+                            <button class="btn btn-sm btn-outline-danger">Remover logo</button>
+                        </form>
+                    }
+                </div>
+                <form method="post" action="/admin/identidade/enviarlogo" enctype="multipart/form-data" asp-antiforgery="true">
+                    <div class="input-group">
+                        <input name="arquivo" type="file" accept=".png,.jpg,.jpeg,.webp" class="form-control" aria-label="Arquivo do logo" required />
+                        <button class="btn btn-outline-primary">Enviar logo</button>
+                    </div>
+                    <div class="form-text">PNG ou WebP com fundo transparente, até 2 MB. Aparece sobre a cor principal, no topo.</div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-7">
+        <form method="post" action="/admin/identidade/salvar" asp-antiforgery="true" class="card">
+            <div class="card-body">
+                <h2 class="h6">Cores</h2>
+                <div class="previa-marca mb-3" id="previa-marca" style="--previa-1:@i.CorPrincipal;--previa-2:@i.CorDestaque">
+                    <span class="previa-logo">@i.Inicial</span>
+                    <strong>@i.NomeLoja</strong>
+                    <span class="previa-botao">Carrinho</span>
+                </div>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label for="CorPrincipal" class="form-label">Cor principal (topo, rodapé e títulos)</label>
+                        <div class="paleta" role="group" aria-label="Sugestões de cor principal">
+                            @foreach (var c in principais)
+                            {
+                                <button type="button" class="paleta-cor" style="background:@c" data-cor-para="CorPrincipal" data-cor="@c" aria-label="Usar @c"></button>
+                            }
+                        </div>
+                        <input id="CorPrincipal" name="CorPrincipal" type="color" class="form-control form-control-color w-100" value="@i.CorPrincipal" data-previa="--previa-1" />
+                    </div>
+                    <div class="col-md-6">
+                        <label for="CorDestaque" class="form-label">Cor de destaque (preço e botões)</label>
+                        <div class="paleta" role="group" aria-label="Sugestões de cor de destaque">
+                            @foreach (var c in destaques)
+                            {
+                                <button type="button" class="paleta-cor" style="background:@c" data-cor-para="CorDestaque" data-cor="@c" aria-label="Usar @c"></button>
+                            }
+                        </div>
+                        <input id="CorDestaque" name="CorDestaque" type="color" class="form-control form-control-color w-100" value="@i.CorDestaque" data-previa="--previa-2" />
+                    </div>
+                </div>
+
+                <h2 class="h6">Atendimento</h2>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <label for="WhatsApp" class="form-label">WhatsApp</label>
+                        <input id="WhatsApp" name="WhatsApp" class="form-control" value="@i.WhatsApp" data-mascara="telefone" maxlength="15" placeholder="(19) 99999-0000" />
+                    </div>
+                    <div class="col-md-4">
+                        <label for="Telefone" class="form-label">Telefone</label>
+                        <input id="Telefone" name="Telefone" class="form-control" value="@i.Telefone" data-mascara="telefone" maxlength="15" />
+                    </div>
+                    <div class="col-md-4">
+                        <label for="Email" class="form-label">E-mail de atendimento</label>
+                        <input id="Email" name="Email" type="email" class="form-control" value="@i.Email" maxlength="254" />
+                    </div>
+                    <div class="col-md-8">
+                        <label for="Endereco" class="form-label">Endereço (aparece no rodapé)</label>
+                        <input id="Endereco" name="Endereco" class="form-control" value="@i.Endereco" maxlength="300" />
+                    </div>
+                    <div class="col-md-4">
+                        <label for="Horario" class="form-label">Horário de atendimento</label>
+                        <input id="Horario" name="Horario" class="form-control" value="@i.Horario" maxlength="120" placeholder="Seg. a sex., 9h às 18h" />
+                    </div>
+                    <div class="col-md-4">
+                        <label for="Instagram" class="form-label">Instagram</label>
+                        <input id="Instagram" name="Instagram" type="url" class="form-control" value="@i.Instagram" placeholder="https://instagram.com/..." />
+                    </div>
+                    <div class="col-md-4">
+                        <label for="Facebook" class="form-label">Facebook</label>
+                        <input id="Facebook" name="Facebook" type="url" class="form-control" value="@i.Facebook" placeholder="https://facebook.com/..." />
+                    </div>
+                    <div class="col-md-4">
+                        <label for="Youtube" class="form-label">YouTube</label>
+                        <input id="Youtube" name="Youtube" type="url" class="form-control" value="@i.Youtube" placeholder="https://youtube.com/..." />
+                    </div>
+                </div>
+
+                <h2 class="h6">Página inicial</h2>
+                <div class="row g-3 mb-4">
+                    <div class="col-12">
+                        <label for="AvisoTopo" class="form-label">Faixa de aviso no topo (opcional)</label>
+                        <input id="AvisoTopo" name="AvisoTopo" class="form-control" value="@i.AvisoTopo" maxlength="160" placeholder="Frete grátis acima de R$ 199 para todo o Brasil" />
+                    </div>
+                    <div class="col-md-4">
+                        <label for="BannerSelo" class="form-label">Selo do banner</label>
+                        <input id="BannerSelo" name="BannerSelo" class="form-control" value="@i.BannerSelo" maxlength="40" />
+                    </div>
+                    <div class="col-md-8">
+                        <label for="BannerTitulo" class="form-label">Título do banner</label>
+                        <input id="BannerTitulo" name="BannerTitulo" class="form-control" value="@i.BannerTitulo" maxlength="90" />
+                    </div>
+                    <div class="col-12">
+                        <label for="BannerTexto" class="form-label">Texto do banner</label>
+                        <input id="BannerTexto" name="BannerTexto" class="form-control" value="@i.BannerTexto" maxlength="200" />
+                    </div>
+                    <div class="col-md-4">
+                        <label for="BannerBotao" class="form-label">Texto do botão</label>
+                        <input id="BannerBotao" name="BannerBotao" class="form-control" value="@i.BannerBotao" maxlength="30" />
+                    </div>
+                    <div class="col-md-8">
+                        <label for="BannerLink" class="form-label">Link do botão</label>
+                        <input id="BannerLink" name="BannerLink" class="form-control" value="@i.BannerLink" maxlength="300" placeholder="/categoria/casa" />
+                        <div class="form-text">Um caminho da loja (ex.: <code>/categoria/casa</code>) ou um endereço https://.</div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="/" target="_blank" class="btn btn-link">Ver a loja</a>
+                    <button class="btn btn-primary">Salvar identidade</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>

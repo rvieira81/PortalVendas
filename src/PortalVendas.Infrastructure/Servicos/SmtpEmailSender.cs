@@ -26,13 +26,18 @@ public class SmtpOptions
 public class SmtpEmailSender : IEmailSender
 {
     private readonly SmtpOptions _opcoes;
+    private readonly PortalVendas.Application.Licenciamento.ILicencaLoja _licenca;
     private readonly ILogger<SmtpEmailSender> _logger;
 
-    public SmtpEmailSender(IOptions<SmtpOptions> opcoes, ILogger<SmtpEmailSender> logger)
+    public SmtpEmailSender(IOptions<SmtpOptions> opcoes, PortalVendas.Application.Licenciamento.ILicencaLoja licenca, ILogger<SmtpEmailSender> logger)
     {
         _opcoes = opcoes.Value;
+        _licenca = licenca;
         _logger = logger;
     }
+
+    /// <summary>O nome que aparece no "De:" é o da licença (o mesmo da vitrine).</summary>
+    private string NomeRemetente => _licenca.Estado.Ativa ? _licenca.Estado.Dados!.NomeLoja : _opcoes.NomeRemetente;
 
     public async Task EnviarAsync(string para, string assunto, string html, CancellationToken ct = default)
     {
@@ -46,7 +51,7 @@ public class SmtpEmailSender : IEmailSender
 
             using var mensagem = new MailMessage
             {
-                From = new MailAddress(_opcoes.Remetente, _opcoes.NomeRemetente, Encoding.UTF8),
+                From = new MailAddress(_opcoes.Remetente, NomeRemetente, Encoding.UTF8),
                 Subject = assunto,
                 SubjectEncoding = Encoding.UTF8,
                 Body = html,

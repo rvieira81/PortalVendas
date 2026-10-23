@@ -1,19 +1,40 @@
+@using PortalVendas.Application.Admin
+@using PortalVendas.Application.Comum
 @inject IOptions<PortalVendas.Infrastructure.Servicos.LojaOptions> Loja
+@inject IdentidadeLojaService Identidade
+@inject CatalogoService Catalogo
 @{
-    var nomeLoja = Loja.Value.Nome;
+    // Nome, razão social e CNPJ vêm da licença; cores, logo e contatos do painel (Identidade da loja)
+    var loja = await Identidade.ObterOuPadraoAsync(Context.RequestAborted);
+    var nomeLoja = loja.NomeLoja;
     var titulo = ViewData["Title"] as string;
-    var cnpj = string.IsNullOrEmpty(Loja.Value.Cnpj) ? "" : $", CNPJ {Loja.Value.Cnpj}";
+    var emailAtendimento = loja.Email ?? Loja.Value.EmailAtendimento;
+    var telefone = loja.Telefone ?? Loja.Value.TelefoneAtendimento;
+
+    IReadOnlyList<CategoriaResumo> departamentos;
+    try { departamentos = await Catalogo.ListarCategoriasAsync(Context.RequestAborted); }
+    catch (Exception ex) when (ex is not OperationCanceledException) { departamentos = Array.Empty<CategoriaResumo>(); }
+
+    var cor1 = loja.CorPrincipal;
+    var cor2 = loja.CorDestaque;
+    var ehAdmin = User.EhAdministrador();
+    var logado = User.Identity?.IsAuthenticated == true;
+    var abrirMini = TempData["MiniCarrinho"] is true;
 }
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#12343B" />
+    <meta name="theme-color" content="@cor1" />
     <title>@(string.IsNullOrEmpty(titulo) ? nomeLoja : $"{titulo} | {nomeLoja}")</title>
     @if (ViewData["Descricao"] is string descricao)
     {
         <meta name="description" content="@descricao" />
+    }
+    @if (loja.Demonstracao)
+    {
+        <meta name="robots" content="noindex, nofollow" />
     }
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -21,50 +42,90 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
           integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="icon" href="~/img/favicon.svg" type="image/svg+xml" />
+    <style>
+        :root {
+            --pv-tinta: @cor1;
+            --pv-tinta-suave: @Cores.Ajustar(cor1, -0.18);
+            --pv-tinta-escura: @Cores.Ajustar(cor1, 0.25);
+            --pv-etiqueta: @cor2;
+            --pv-etiqueta-forte: @Cores.Ajustar(cor2, 0.1);
+            --pv-etiqueta-clara: @Cores.Ajustar(cor2, -0.78);
+            --bs-primary-rgb: @Cores.ParaRgbCss(cor1);
+            --bs-link-hover-color-rgb: @Cores.ParaRgbCss(cor1);
+        }
+    </style>
+    @if (!string.IsNullOrEmpty(loja.Logo))
+    {
+        <link rel="icon" href="@Formatacao.UrlImagem(loja.Logo)" />
+    }
+    else
+    {
+        <link rel="icon" href="~/img/favicon.svg" type="image/svg+xml" />
+    }
     @await RenderSectionAsync("Head", required: false)
 </head>
 <body class="d-flex flex-column min-vh-100">
     <a class="visually-hidden-focusable pular" href="#conteudo">Pular para o conteúdo</a>
 
-    <header class="topo">
-        <div class="container topo-linha">
-            <a class="marca" href="/" aria-label="@nomeLoja — página inicial">
-                <img src="~/img/favicon.svg" alt="" width="34" height="34" />
-                <span>@nomeLoja</span>
+    @if (loja.Demonstracao)
+    {
+        <div class="faixa-demo" role="status">
+            Versão de demonstração — o nome, a razão social e o CNPJ da loja aparecem depois que a licença é instalada.
+            @if (ehAdmin)
+            {
+                <a href="/admin/identidade">Instalar licença</a>
+            }
+        </div>
+    }
+    @if (!string.IsNullOrEmpty(loja.AvisoTopo))
+    {
+        <div class="faixa-aviso"><div class="container">@loja.AvisoTopo</div></div>
+    }
+
+    <header class="cab">
+        <div class="container cab-linha">
+            <a class="cab-marca" href="/" aria-label="@nomeLoja — página inicial">
+                @if (string.IsNullOrEmpty(loja.Logo))
+                {
+                    <span class="cab-logo" aria-hidden="true">@loja.Inicial</span>
+                }
+                else
+                {
+                    <img class="cab-logo-img" src="@Formatacao.UrlImagem(loja.Logo)" alt="" height="44" />
+                }
+                <span class="cab-nome">@nomeLoja</span>
             </a>
 
-            <form class="busca" role="search" action="/busca" method="get">
+            <form class="cab-busca" role="search" action="/busca" method="get">
                 <label for="busca-topo" class="visually-hidden">Buscar produtos</label>
-                <input id="busca-topo" type="search" name="q" placeholder="Buscar produtos"
+                <input id="busca-topo" type="search" name="q" placeholder="Busque por produto ou categoria"
                        value="@Context.Request.Query["q"]" maxlength="100" autocomplete="off" />
-                <button type="submit">Buscar</button>
+                <button type="submit" aria-label="Buscar">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                </button>
             </form>
 
-            <nav class="topo-acoes" aria-label="Sua conta">
-                @if (User.EhAdministrador())
-                {
-                    <a class="topo-link" href="/admin">Painel admin</a>
-                }
-                else if (User.Identity?.IsAuthenticated == true)
-                {
-                    <a class="topo-link" href="/pedidos">Meus pedidos</a>
-                }
-
-                @if (User.Identity?.IsAuthenticated == true)
+            <nav class="cab-acoes" aria-label="Sua conta">
+                @if (logado)
                 {
                     <div class="dropdown">
-                        <button class="topo-link dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            Olá, @(User.Identity.Name?.Split(' ')[0])
+                        <button class="cab-conta dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>
+                            <span class="cab-conta-texto">Olá, @(User.Identity!.Name?.Split(' ')[0])<strong>@(ehAdmin ? "Administração" : "Minha conta")</strong></span>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end">
-                            @if (!User.EhAdministrador())
+                            @if (ehAdmin)
                             {
+                                <li><a class="dropdown-item" href="/admin">Painel administrativo</a></li>
+                                <li><a class="dropdown-item" href="/admin/identidade">Identidade da loja</a></li>
+                            }
+                            else
+                            {
+                                <li><a class="dropdown-item" href="/pedidos">Meus pedidos</a></li>
                                 <li><a class="dropdown-item" href="/minha-conta">Meus dados</a></li>
                                 <li><a class="dropdown-item" href="/minha-conta/enderecos">Endereços</a></li>
-                                <li><a class="dropdown-item" href="/pedidos">Meus pedidos</a></li>
-                                <li><hr class="dropdown-divider" /></li>
                             }
+                            <li><hr class="dropdown-divider" /></li>
                             <li>
                                 <form method="post" action="/conta/sair" asp-antiforgery="true">
                                     <button type="submit" class="dropdown-item">Sair</button>
@@ -75,19 +136,39 @@
                 }
                 else
                 {
-                    <a class="topo-link" href="/conta/entrar?returnUrl=@Uri.EscapeDataString(Context.Request.Path + Context.Request.QueryString)">Entrar</a>
+                    <a class="cab-conta" href="/conta/entrar?returnUrl=@Uri.EscapeDataString(Context.Request.Path + Context.Request.QueryString)">
+                        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>
+                        <span class="cab-conta-texto">Olá, entre<strong>Minha conta</strong></span>
+                    </a>
                 }
 
-                @if (!User.EhAdministrador())
+                @if (!ehAdmin)
                 {
-                    <a class="carrinho-botao" href="/carrinho">
-                        <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 4h2l2.4 11.2a1.5 1.5 0 0 0 1.5 1.2h8.6a1.5 1.5 0 0 0 1.5-1.1L21 8H6.2"/><circle cx="9.5" cy="20" r="1.4" fill="currentColor"/><circle cx="17.5" cy="20" r="1.4" fill="currentColor"/></svg>
-                        <span>Carrinho</span>
+                    <a class="cab-carrinho" href="/carrinho">
+                        <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 4h2l2.4 11.2a1.5 1.5 0 0 0 1.5 1.2h8.6a1.5 1.5 0 0 0 1.5-1.1L21 8H6.2"/><circle cx="9.5" cy="20" r="1.4" fill="currentColor"/><circle cx="17.5" cy="20" r="1.4" fill="currentColor"/></svg>
+                        <span class="cab-carrinho-texto">Carrinho</span>
                         @await Component.InvokeAsync("ResumoCarrinho")
                     </a>
                 }
             </nav>
         </div>
+
+        @if (departamentos.Count > 0)
+        {
+            <nav class="cab-departamentos" aria-label="Departamentos">
+                <div class="container">
+                    <a href="/busca">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+                        Todos os produtos
+                    </a>
+                    @foreach (var d in departamentos.Take(8))
+                    {
+                        <a href="/categoria/@d.Slug" aria-current="@(Context.Request.Path == $"/categoria/{d.Slug}" ? "page" : null)">@d.Nome</a>
+                    }
+                    <a href="/busca?ordem=MenorPreco" class="cab-dep-oferta">Menores preços</a>
+                </div>
+            </nav>
+        }
     </header>
 
     <main id="conteudo" class="flex-grow-1">
@@ -105,31 +186,92 @@
         }
     </main>
 
-    <footer class="rodape">
-        <div class="container">
-            <div class="rodape-grade">
-                <div>
-                    <strong class="rodape-marca">@nomeLoja</strong>
-                    <p>Pague com Pix, cartão em até 12x ou boleto. Frete calculado pelo seu CEP antes de fechar o pedido.</p>
-                </div>
-                <div>
-                    <strong>Atendimento</strong>
-                    <p>
-                        <a href="mailto:@Loja.Value.EmailAtendimento">@Loja.Value.EmailAtendimento</a>
-                        @if (!string.IsNullOrEmpty(Loja.Value.TelefoneAtendimento))
-                        {
-                            <text><br />@Loja.Value.TelefoneAtendimento</text>
-                        }
-                    </p>
-                </div>
-                <div>
-                    <strong>A loja</strong>
-                    <p><a href="/termos">Termos de uso</a><br /><a href="/privacidade">Política de privacidade</a></p>
+    <footer class="rodape2">
+        <div class="container rodape2-grade">
+            <div class="rodape2-marca">
+                <span class="rodape2-nome">
+                    @if (string.IsNullOrEmpty(loja.Logo))
+                    {
+                        <span class="cab-logo cab-logo-pequeno" aria-hidden="true">@loja.Inicial</span>
+                    }
+                    else
+                    {
+                        <img src="@Formatacao.UrlImagem(loja.Logo)" alt="" height="36" />
+                    }
+                    @nomeLoja
+                </span>
+                <p>Entrega para todo o Brasil com o frete calculado pelo seu CEP antes de fechar o pedido.</p>
+                <div class="rodape2-sociais">
+                    @if (!string.IsNullOrEmpty(loja.Instagram))
+                    {
+                        <a href="@loja.Instagram" target="_blank" rel="noopener" aria-label="Instagram"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg></a>
+                    }
+                    @if (!string.IsNullOrEmpty(loja.Facebook))
+                    {
+                        <a href="@loja.Facebook" target="_blank" rel="noopener" aria-label="Facebook"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M15 3h-2a4 4 0 0 0-4 4v3H7v4h2v7h4v-7h3l1-4h-4V7a1 1 0 0 1 1-1h2z"/></svg></a>
+                    }
+                    @if (!string.IsNullOrEmpty(loja.Youtube))
+                    {
+                        <a href="@loja.Youtube" target="_blank" rel="noopener" aria-label="YouTube"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="4"/><path d="m10 9 5 3-5 3z" fill="currentColor"/></svg></a>
+                    }
                 </div>
             </div>
-            <p class="rodape-legal">&copy; @DateTime.Now.Year @(nomeLoja + cnpj). Pagamentos processados pelo Mercado Pago.</p>
+            <nav aria-label="Institucional">
+                <strong>Institucional</strong>
+                <a href="/termos">Termos de uso</a>
+                <a href="/privacidade">Política de privacidade</a>
+            </nav>
+            <nav aria-label="Ajuda">
+                <strong>Ajuda</strong>
+                <a href="/pedidos">Meus pedidos</a>
+                <a href="/minha-conta">Minha conta</a>
+                <a href="/carrinho">Carrinho</a>
+            </nav>
+            <div>
+                <strong>Atendimento</strong>
+                @if (!string.IsNullOrEmpty(loja.WhatsApp))
+                {
+                    <a href="@loja.WhatsAppLink" target="_blank" rel="noopener">WhatsApp @loja.WhatsApp</a>
+                }
+                @if (!string.IsNullOrEmpty(telefone))
+                {
+                    <span>@telefone</span>
+                }
+                <a href="mailto:@emailAtendimento">@emailAtendimento</a>
+                @if (!string.IsNullOrEmpty(loja.Horario))
+                {
+                    <span>@loja.Horario</span>
+                }
+            </div>
+            <div>
+                <strong>Formas de pagamento</strong>
+                <div class="selos-pagamento">
+                    <span>PIX</span><span>VISA</span><span>MASTER</span><span>ELO</span><span>BOLETO</span>
+                </div>
+                <span class="rodape2-seguro">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg>
+                    Pagamento processado pelo Mercado Pago
+                </span>
+            </div>
+        </div>
+        <div class="rodape2-legal">
+            <p class="container">
+                &copy; @DateTime.Now.Year @loja.RazaoSocial · CNPJ @loja.CnpjFormatado@(string.IsNullOrEmpty(loja.Endereco) ? "" : " · " + loja.Endereco)
+            </p>
         </div>
     </footer>
+
+    @if (!string.IsNullOrEmpty(loja.WhatsAppLink) && !ehAdmin)
+    {
+        <a class="whatsapp-flutuante" href="@loja.WhatsAppLink" target="_blank" rel="noopener" aria-label="Falar no WhatsApp">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l1.3-3.9A8 8 0 1 1 8 19z"/><path d="M9 9.5c0 3 2.5 5.5 5.5 5.5l1-1.5-2-1-1 .8c-.8-.4-1.4-1-1.8-1.8l.8-1-1-2z"/></svg>
+        </a>
+    }
+
+    @if (abrirMini)
+    {
+        @await Component.InvokeAsync("MiniCarrinho")
+    }
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
             integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>

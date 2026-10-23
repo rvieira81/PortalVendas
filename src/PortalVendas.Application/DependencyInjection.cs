@@ -8,6 +8,7 @@ using PortalVendas.Application.Emails;
 using PortalVendas.Application.Frete;
 using PortalVendas.Application.Pagamentos;
 using PortalVendas.Application.Pedidos;
+using PortalVendas.Application.WhatsApp;
 
 namespace PortalVendas.Application;
 
@@ -18,6 +19,15 @@ public static class DependencyInjection
         services.AddSingleton<IRelogio, RelogioSistema>();
 
         services.AddScoped<ConfiguracaoLojaService>();
+        services.AddScoped<IdentidadeLojaService>();
+
+        // Módulo WhatsApp (só atende com o módulo na licença)
+        services.AddScoped<ConfiguracaoWhatsAppService>();
+        services.AddScoped<EnvioWhatsAppService>();
+        services.AddScoped<AtendimentoWhatsAppService>();
+        services.AddScoped<ProcessadorWhatsAppService>();
+        services.AddScoped<ConversasWhatsAppService>();
+        services.AddScoped<IAvisoPedidoWhatsApp, AvisoPedidoWhatsApp>();
         services.AddScoped<CatalogoService>();
         services.AddScoped<CarrinhoService>();
         services.AddScoped<FreteService>();

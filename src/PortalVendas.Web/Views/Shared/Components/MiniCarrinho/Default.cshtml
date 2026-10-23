@@ -1,0 +1,43 @@
+@model MiniCarrinhoModelo
+<div class="mini-fundo" data-mini-fechar></div>
+<aside class="mini-carrinho" role="dialog" aria-modal="true" aria-labelledby="mini-titulo" tabindex="-1" id="mini-carrinho">
+    <header class="mini-topo">
+        <h2 id="mini-titulo"><span class="mini-ok" aria-hidden="true">✓</span> Adicionado ao carrinho</h2>
+        <button type="button" class="mini-x" data-mini-fechar aria-label="Fechar">×</button>
+    </header>
+
+    @if (Model.Configuracao.TemFreteGratis)
+    {
+        <div class="mini-frete">
+            @if (Model.FaltaFreteGratis > 0)
+            {
+                <p>Faltam <strong>@Formatacao.Moeda(Model.FaltaFreteGratis)</strong> para o <strong>frete grátis</strong></p>
+            }
+            else
+            {
+                <p><strong>Você ganhou frete grátis!</strong></p>
+            }
+            <div class="barra-progresso" role="progressbar" aria-label="Progresso para o frete grátis"
+                 aria-valuenow="@Model.PercentualFreteGratis" aria-valuemin="0" aria-valuemax="100">
+                <span style="width: @(Model.PercentualFreteGratis)%"></span>
+            </div>
+        </div>
+    }
+
+    <ul class="mini-itens">
+        @foreach (var item in Model.Carrinho.Itens)
+        {
+            <li>
+                <img src="@Formatacao.UrlImagem(item.Imagem)" alt="" width="64" height="64" />
+                <span class="mini-item-nome"><a href="/produto/@item.Slug">@item.Nome</a><small>@item.Quantidade × @Formatacao.Moeda(item.PrecoAtual)</small></span>
+                <strong>@Formatacao.Moeda(item.PrecoAtual * item.Quantidade)</strong>
+            </li>
+        }
+    </ul>
+
+    <footer class="mini-rodape">
+        <p class="mini-subtotal"><span>Subtotal (@Model.Carrinho.QuantidadeTotal @(Model.Carrinho.QuantidadeTotal == 1 ? "item" : "itens"))</span><strong>@Formatacao.Moeda(Model.Carrinho.Subtotal)</strong></p>
+        <a href="/carrinho" class="btn btn-comprar btn-lg w-100">Ver carrinho e fechar pedido</a>
+        <button type="button" class="btn btn-link w-100" data-mini-fechar>Continuar comprando</button>
+    </footer>
+</aside>

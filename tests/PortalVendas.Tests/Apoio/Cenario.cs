@@ -3,6 +3,8 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using PortalVendas.Application.Admin;
+using PortalVendas.Application.Catalogo;
+using PortalVendas.Application.WhatsApp;
 using PortalVendas.Application.Carrinhos;
 using PortalVendas.Application.Contas;
 using PortalVendas.Application.Emails;
@@ -38,9 +40,15 @@ public sealed class Cenario : IDisposable
     public LinksFalsos Links { get; } = new();
     public HashSenha Hash { get; } = new();
     public ProtetorDados Protetor { get; } = new(new EphemeralDataProtectionProvider());
+    public LicencaFalsa Licenca { get; } = LicencaFalsa.Valida(PortalVendas.Application.Licenciamento.ModulosLicenca.WhatsApp);
+    public CepFalso Cep { get; } = new();
+    public AssistenteFalso Assistente { get; } = new();
+    public ConectorFalso Conector { get; } = new();
+    public FabricaFalsa FabricaWhatsApp { get; }
 
     public Cenario()
     {
+        FabricaWhatsApp = new FabricaFalsa(Conector);
         _conexao = new SqliteConnection("DataSource=:memory:");
         _conexao.Open();
         Db = NovoContexto();
@@ -71,6 +79,15 @@ public sealed class Cenario : IDisposable
     public PedidoService Pedidos => new(Db, Gateway, Estoque, Notificador, Relogio, NullLogger<PedidoService>.Instance);
     public ContaService Contas => new(Db, Hash, Protetor, Email, Links, Relogio, NullLogger<ContaService>.Instance);
     public EnderecoService Enderecos => new(Db, Relogio);
+    public CatalogoService Catalogo => new(Db);
+    public IdentidadeLojaService Identidade => new(Db, Licenca, new ImagensFalsas(), Relogio);
+    public ConfiguracaoWhatsAppService ConfiguracaoWhatsApp => new(Db, Protetor, Licenca, Relogio);
+    public EnvioWhatsAppService EnvioWhatsApp => new(Db, FabricaWhatsApp, ConfiguracaoWhatsApp, Relogio, NullLogger<EnvioWhatsAppService>.Instance);
+    public AtendimentoWhatsAppService Atendimento => new(Db, Catalogo, Carrinhos, Checkout, Pagamentos, Enderecos, Contas, Cep, Configuracao,
+        Identidade, ConfiguracaoWhatsApp, Assistente, Links, Licenca, Relogio, NullLogger<AtendimentoWhatsAppService>.Instance);
+    public ProcessadorWhatsAppService ProcessadorWhatsApp => new(Db, ConfiguracaoWhatsApp, Atendimento, EnvioWhatsApp, Relogio,
+        NullLogger<ProcessadorWhatsAppService>.Instance);
+    public ConversasWhatsAppService ConversasWhatsApp => new(Db, EnvioWhatsApp, FabricaWhatsApp, Relogio);
 
     // ---------------------------------------------------------------- dados
 

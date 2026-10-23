@@ -15,3 +15,8 @@ publish/
 appsettings.Production.json
 appsettings.Homologacao.json
 *.pfx
+
+# Licenciamento: a chave privada e as licenças emitidas ficam FORA do repositório
+*.pem
+*.lic
+chave-privada*

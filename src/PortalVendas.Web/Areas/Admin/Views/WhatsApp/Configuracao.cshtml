@@ -1,0 +1,158 @@
+@using PortalVendas.Application.WhatsApp
+@model WhatsAppConfiguracaoViewModel
+@{
+    ViewData["Title"] = "Configuração do WhatsApp";
+    string Salvo(bool tem) => tem ? "•••••••• (salvo — deixe em branco para manter)" : "";
+}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+        <a href="/admin/whatsapp" class="small">&larr; Conversas</a>
+        <h1 class="h3 mb-0">Configuração do WhatsApp</h1>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-xl-7">
+        <form method="post" action="/admin/whatsapp/configuracao" asp-antiforgery="true" class="card" autocomplete="off">
+            <div class="card-body">
+                <h2 class="h6">Provedor</h2>
+                <div class="d-flex flex-column gap-2 mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="Provedor" id="p0" value="@ProvedorWhatsApp.Desativado" checked="@(Model.Provedor == ProvedorWhatsApp.Desativado)" />
+                        <label class="form-check-label" for="p0">Desligado</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="Provedor" id="p1" value="@ProvedorWhatsApp.Meta" checked="@(Model.Provedor == ProvedorWhatsApp.Meta)" data-mostrar="cfg-meta" />
+                        <label class="form-check-label" for="p1"><strong>API oficial da Meta</strong> (WhatsApp Cloud API) — recomendada: sem risco de bloqueio, com botões e listas</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="Provedor" id="p2" value="@ProvedorWhatsApp.Evolution" checked="@(Model.Provedor == ProvedorWhatsApp.Evolution)" data-mostrar="cfg-evolution" />
+                        <label class="form-check-label" for="p2"><strong>Evolution API</strong> (não oficial) — usa o número atual lendo o QR Code; a Meta pode bloquear o número</label>
+                    </div>
+                </div>
+
+                <fieldset id="cfg-meta" class="border rounded p-3 mb-3">
+                    <legend class="h6 float-none w-auto px-2 mb-0">API oficial da Meta</legend>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="MetaPhoneNumberId" class="form-label">Phone Number ID</label>
+                            <input id="MetaPhoneNumberId" name="MetaPhoneNumberId" class="form-control" value="@Model.MetaPhoneNumberId" inputmode="numeric" maxlength="40" />
+                        </div>
+                        <div class="col-md-6">
+                            <label for="MetaToken" class="form-label">Token de acesso permanente</label>
+                            <input id="MetaToken" name="MetaToken" type="password" class="form-control" placeholder="@Salvo(Model.MetaTemToken)" />
+                        </div>
+                        <div class="col-md-6">
+                            <label for="MetaAppSecret" class="form-label">App Secret</label>
+                            <input id="MetaAppSecret" name="MetaAppSecret" type="password" class="form-control" placeholder="@Salvo(Model.MetaTemAppSecret)" />
+                            <div class="form-text">Confere a assinatura das mensagens recebidas.</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="MetaModeloAviso" class="form-label">Modelo de aviso (opcional)</label>
+                            <input id="MetaModeloAviso" name="MetaModeloAviso" class="form-control" value="@Model.MetaModeloAviso" placeholder="status_pedido" />
+                        </div>
+                        <div class="col-md-2">
+                            <label for="MetaIdiomaModelo" class="form-label">Idioma</label>
+                            <input id="MetaIdiomaModelo" name="MetaIdiomaModelo" class="form-control" value="@Model.MetaIdiomaModelo" />
+                        </div>
+                        <div class="col-12 form-text mt-0">
+                            O modelo é usado para avisar status do pedido depois de 24 h sem mensagem do cliente (regra da Meta).
+                            Crie no Gerenciador do WhatsApp um modelo de "Utilidade" com 3 variáveis: {{1}} número do pedido, {{2}} situação, {{3}} rastreio.
+                        </div>
+                    </div>
+                </fieldset>
+
+                <fieldset id="cfg-evolution" class="border rounded p-3 mb-3">
+                    <legend class="h6 float-none w-auto px-2 mb-0">Evolution API</legend>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="EvolutionUrl" class="form-label">Endereço do servidor</label>
+                            <input id="EvolutionUrl" name="EvolutionUrl" type="url" class="form-control" value="@Model.EvolutionUrl" placeholder="https://evolution.minhaloja.com.br" />
+                        </div>
+                        <div class="col-md-3">
+                            <label for="EvolutionInstancia" class="form-label">Instância</label>
+                            <input id="EvolutionInstancia" name="EvolutionInstancia" class="form-control" value="@Model.EvolutionInstancia" />
+                        </div>
+                        <div class="col-md-3">
+                            <label for="EvolutionApiKey" class="form-label">API key</label>
+                            <input id="EvolutionApiKey" name="EvolutionApiKey" type="password" class="form-control" placeholder="@Salvo(Model.EvolutionTemApiKey)" />
+                        </div>
+                    </div>
+                </fieldset>
+
+                <h2 class="h6">Robô</h2>
+                <div class="form-check form-switch mb-2">
+                    <input class="form-check-input" type="checkbox" role="switch" id="RoboAtivo" name="RoboAtivo" value="true" checked="@Model.RoboAtivo" />
+                    <label class="form-check-label" for="RoboAtivo">Robô responde automaticamente (desligado, só o atendente responde pelo painel)</label>
+                </div>
+                <div class="mb-3">
+                    <label for="BoasVindas" class="form-label">Mensagem de boas-vindas (opcional)</label>
+                    <textarea id="BoasVindas" name="BoasVindas" class="form-control" rows="3" maxlength="500" placeholder="Olá, {nome}! Bem-vindo à {loja}. Como posso ajudar?">@Model.BoasVindas</textarea>
+                    <div class="form-text">Use {nome} para o nome do cliente e {loja} para o nome da loja. Em branco, usa a mensagem padrão.</div>
+                </div>
+
+                <h2 class="h6">Inteligência artificial (opcional)</h2>
+                <div class="form-check form-switch mb-2">
+                    <input class="form-check-input" type="checkbox" role="switch" id="IaAtiva" name="IaAtiva" value="true" checked="@Model.IaAtiva" />
+                    <label class="form-check-label" for="IaAtiva">Entender mensagens escritas livremente ("vocês têm panela de pressão?", "qual o prazo pra Campinas?")</label>
+                </div>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-7">
+                        <label for="IaChaveApi" class="form-label">Chave da API da Anthropic (Claude)</label>
+                        <input id="IaChaveApi" name="IaChaveApi" type="password" class="form-control" placeholder="@Salvo(Model.IaTemChave)" />
+                    </div>
+                    <div class="col-md-5">
+                        <label for="IaModelo" class="form-label">Modelo</label>
+                        <input id="IaModelo" name="IaModelo" class="form-control" value="@Model.IaModelo" />
+                    </div>
+                    <div class="col-12 form-text mt-0">A IA só interpreta a mensagem e responde dúvidas com as informações da loja; produtos, preços e estoque vêm sempre do catálogo. Sem IA, o robô usa a busca por palavras.</div>
+                </div>
+
+                <div class="d-flex justify-content-end">
+                    <button class="btn btn-primary">Salvar configuração</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="col-xl-5">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h2 class="h6">Endereços para configurar no provedor</h2>
+                <p class="small text-secondary">O endereço público do site vem de <code>Loja:UrlBase</code> no appsettings e precisa estar no domínio da licença, com HTTPS.</p>
+                <label for="url-meta" class="form-label small fw-semibold mb-1">Meta — Callback URL</label>
+                <div class="input-group input-group-sm mb-2">
+                    <input id="url-meta" class="form-control" value="@Model.UrlWebhookMeta" readonly />
+                    <button type="button" class="btn btn-outline-secondary" data-copiar="#url-meta">Copiar</button>
+                </div>
+                <label for="token-meta" class="form-label small fw-semibold mb-1">Meta — Verify token</label>
+                <div class="input-group input-group-sm mb-1">
+                    <input id="token-meta" class="form-control" value="@Model.MetaVerifyToken" readonly />
+                    <button type="button" class="btn btn-outline-secondary" data-copiar="#token-meta">Copiar</button>
+                </div>
+                <div class="form-text mb-3">Assine o campo <strong>messages</strong> no webhook do aplicativo.</div>
+
+                <label for="url-evo" class="form-label small fw-semibold mb-1">Evolution — Webhook URL</label>
+                <div class="input-group input-group-sm mb-1">
+                    <input id="url-evo" class="form-control" value="@Model.UrlWebhookEvolution" readonly />
+                    <button type="button" class="btn btn-outline-secondary" data-copiar="#url-evo">Copiar</button>
+                </div>
+                <div class="form-text mb-2">Evento <strong>MESSAGES_UPSERT</strong>, com "Webhook by Events" desligado. O endereço contém um segredo: não compartilhe.</div>
+                <form method="post" action="/admin/whatsapp/renovartoken" asp-antiforgery="true" data-confirmar="Gerar um novo endereço? O atual para de funcionar até você atualizar na Evolution.">
+                    <button class="btn btn-link btn-sm p-0">Gerar novo endereço da Evolution</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <h2 class="h6">Testar envio</h2>
+                <p class="small text-secondary">Na API oficial é enviado o modelo <code>hello_world</code> (o único liberado sem o cliente ter escrito antes). O melhor teste é mandar um "oi" do seu celular para o número da loja.</p>
+                <form method="post" action="/admin/whatsapp/testar" asp-antiforgery="true" class="input-group">
+                    <input name="telefone" class="form-control" placeholder="(19) 99999-0000" data-mascara="telefone" aria-label="Celular para o teste" required />
+                    <button class="btn btn-outline-primary">Enviar teste</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,22 +1,45 @@
+@using PortalVendas.Application.Admin
 @model ProdutoResumo
-<a href="/produto/@Model.Slug" class="produto @(Model.Esgotado ? "produto-esgotado" : "")">
-    <span class="produto-foto">
+@{
+    // Opcionais vindos da página: ViewData["ConfigLoja"] (parcelamento), ViewData["SeloCard"] (ex.: "1º mais vendido")
+    var configuracao = ViewData["ConfigLoja"] as ConfiguracaoLoja;
+    var selo = ViewData["SeloCard"] as string;
+    var retornar = Context.Request.Path + Context.Request.QueryString;
+    var desconto = Model.PrecoDe is { } de && de > Model.Preco ? (int)Math.Round((1 - Model.Preco / de) * 100) : 0;
+}
+<article class="card-produto @(Model.Esgotado ? "card-esgotado" : "")">
+    <a href="/produto/@Model.Slug" class="card-foto" tabindex="-1" aria-hidden="true">
         <img src="@Formatacao.UrlImagem(Model.Imagem)" alt="" loading="lazy" width="400" height="400" />
-        @if (Model.Esgotado)
+    </a>
+    @if (Model.Esgotado)
+    {
+        <span class="card-selo card-selo-esgotado">Esgotado</span>
+    }
+    else if (desconto > 0)
+    {
+        <span class="card-selo card-selo-oferta">-@desconto%</span>
+    }
+    else if (!string.IsNullOrEmpty(selo))
+    {
+        <span class="card-selo">@selo</span>
+    }
+    <div class="card-corpo">
+        <a href="/produto/@Model.Slug" class="card-nome">@Model.Nome</a>
+        @if (Model.PrecoDe is not null && desconto > 0)
         {
-            <span class="produto-aviso">Esgotado</span>
+            <s class="card-de">@Formatacao.Moeda(Model.PrecoDe.Value)</s>
         }
-        else if (Model.PrecoDe is not null)
+        <span class="card-preco">@Formatacao.Moeda(Model.Preco)</span>
+        <span class="card-parcelas">@Formatacao.Parcelamento(Model.Preco, configuracao)</span>
+        @if (!Model.Esgotado)
         {
-            <span class="produto-aviso produto-aviso-oferta">@(Math.Round((1 - Model.Preco / Model.PrecoDe.Value) * 100))% off</span>
+            <form method="post" action="/carrinho/adicionar" asp-antiforgery="true" class="card-comprar">
+                <input type="hidden" name="produtoId" value="@Model.Id" />
+                <input type="hidden" name="quantidade" value="1" />
+                <input type="hidden" name="retornarPara" value="@retornar" />
+                <input type="hidden" name="abrirMini" value="true" />
+                <button type="submit" class="btn btn-comprar w-100">Adicionar ao carrinho</button>
+            </form>
         }
-    </span>
-    <span class="produto-nome">@Model.Nome</span>
-    <span class="produto-precos">
-        <span class="etiqueta">@Formatacao.Moeda(Model.Preco)</span>
-        @if (Model.PrecoDe is not null)
-        {
-            <s class="preco-de">@Formatacao.Moeda(Model.PrecoDe.Value)</s>
-        }
-    </span>
-</a>
+    </div>
+</article>

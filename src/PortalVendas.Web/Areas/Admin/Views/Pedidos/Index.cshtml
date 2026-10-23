@@ -1,16 +1,26 @@
 @model PedidosAdminIndexViewModel
 @{
     ViewData["Title"] = "Pedidos";
-    var urlBase = $"/admin/pedidos?status={Model.Status}&de={Model.De}&ate={Model.Ate}&termo={Uri.EscapeDataString(Model.Termo ?? "")}";
+    var urlBase = $"/admin/pedidos?status={Model.Status}&de={Model.De}&ate={Model.Ate}&origem={Model.Origem}&termo={Uri.EscapeDataString(Model.Termo ?? "")}";
 }
 <h1 class="h3 mb-3">Pedidos <small class="text-muted fs-6">(@Model.Pedidos.TotalItens)</small></h1>
 
 <form method="get" class="row g-2 mb-3 align-items-end">
-    <div class="col-md-3">
+    <div class="col-md-2">
         <label for="termo" class="form-label small mb-0">Número, nome ou e-mail</label>
         <input id="termo" name="termo" class="form-control" value="@Model.Termo" />
     </div>
-    <div class="col-md-3">
+    <div class="col-6 col-md-2">
+        <label for="origem" class="form-label small mb-0">Canal</label>
+        <select id="origem" name="origem" class="form-select">
+            <option value="">Todos</option>
+            @foreach (var o in Enum.GetValues<OrigemPedido>())
+            {
+                <option value="@o" selected="@(o == Model.Origem)">@o.Descricao()</option>
+            }
+        </select>
+    </div>
+    <div class="col-6 col-md-2">
         <label for="status" class="form-label small mb-0">Status</label>
         <select id="status" name="status" class="form-select">
             <option value="">Todos</option>
@@ -44,7 +54,13 @@
             @foreach (var p in Model.Pedidos.Itens)
             {
                 <tr>
-                    <td><a href="/admin/pedidos/detalhe/@p.Id">nº @p.Numero</a></td>
+                    <td>
+                        <a href="/admin/pedidos/detalhe/@p.Id">nº @p.Numero</a>
+                        @if (p.Origem == OrigemPedido.WhatsApp)
+                        {
+                            <span class="badge text-bg-success ms-1" title="Venda feita pelo WhatsApp">WhatsApp</span>
+                        }
+                    </td>
                     <td class="small">@Formatacao.DataHora(p.CriadoEm)</td>
                     <td>@p.Cliente</td>
                     <td class="small">@p.FreteDescricao</td>

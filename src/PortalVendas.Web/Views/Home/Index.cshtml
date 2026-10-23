@@ -4,9 +4,7 @@
     ViewData["Descricao"] = "Produtos com entrega para todo o Brasil. Pague com Pix, cartão em até 12x ou boleto.";
     ViewData["LarguraTotal"] = true;
 
-    var inicio = string.IsNullOrEmpty(Model.Termo) && string.IsNullOrEmpty(Model.Categoria)
-                 && string.IsNullOrEmpty(Model.PrecoMin) && string.IsNullOrEmpty(Model.PrecoMax)
-                 && Model.Produtos.PaginaAtual == 1;
+    var inicio = Model.Inicio;
     var temFiltroPreco = !string.IsNullOrEmpty(Model.PrecoMin) || !string.IsNullOrEmpty(Model.PrecoMax);
 
     string MontarUrl(OrdemVitrine? ordem = null)
@@ -31,19 +29,10 @@
 
 @if (inicio)
 {
-    <section class="boas-vindas">
-        <div class="container">
-            <h1>Tudo para a casa, o trabalho e o lazer, entregue no seu CEP.</h1>
-            <p>Escolha os produtos, veja o frete antes de fechar e pague com Pix, cartão em até 12x ou boleto.</p>
-            <ul class="garantias">
-                <li><strong>Frete na hora</strong> Correios e transportadoras, com prazo real para o seu endereço</li>
-                <li><strong>Pague como preferir</strong> Pix com confirmação imediata, cartão ou boleto</li>
-                <li><strong>Mudou de ideia?</strong> Cancele pelo site enquanto o pedido não foi enviado</li>
-            </ul>
-        </div>
-    </section>
+    @await Html.PartialAsync("_Inicio", Model)
 }
-
+else
+{
 <div class="container pb-5">
     <nav class="categorias" aria-label="Categorias">
         <a href="@LinkCategoria(null)" class="chip @(string.IsNullOrEmpty(Model.Categoria) ? "chip-ativo" : "")"
@@ -93,7 +82,7 @@
     }
     else
     {
-        <div class="grade-produtos">
+        <div class="grade-cards">
             @foreach (var p in Model.Produtos.Itens)
             {
                 <partial name="_CardProduto" model="p" />
@@ -102,3 +91,4 @@
         <partial name="_Paginacao" model="new Paginacao(Model.Produtos.PaginaAtual, Model.Produtos.TotalPaginas, MontarUrl())" />
     }
 </div>
+}

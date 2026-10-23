@@ -458,6 +458,24 @@ public class ContaService
         return Resultado.Ok();
     }
 
+    // ================================================================== acesso pelo WhatsApp
+
+    public static readonly TimeSpan ValidadeAcessoWhatsApp = TimeSpan.FromHours(24);
+
+    /// <summary>Marca no SenhaHash das contas criadas na conversa do WhatsApp (sem senha: login impossível).</summary>
+    public const string MarcadorContaWhatsApp = "!whatsapp";
+
+    /// <summary>Link de acesso enviado no WhatsApp para o cliente pagar com cartão ou boleto no site. Vale 24 h.</summary>
+    public Task<string> CriarAcessoWhatsAppAsync(int usuarioId, CancellationToken ct = default) =>
+        CriarTokenAsync(usuarioId, TipoToken.AcessoWhatsApp, ValidadeAcessoWhatsApp, ct);
+
+    /// <summary>Confere o link de acesso. Nunca libera conta de administrador.</summary>
+    public async Task<Usuario?> ValidarAcessoWhatsAppAsync(string? token, CancellationToken ct = default)
+    {
+        var registro = await ObterTokenValidoAsync(token, TipoToken.AcessoWhatsApp, ct);
+        return registro?.Usuario is { EhAdministrador: false } usuario ? usuario : null;
+    }
+
     // ================================================================== tokens
 
     private async Task<string> CriarTokenAsync(int usuarioId, TipoToken tipo, TimeSpan validade, CancellationToken ct)

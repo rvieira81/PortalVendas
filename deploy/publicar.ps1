@@ -28,7 +28,7 @@ param(
 $ErrorActionPreference = 'Stop'
 $raiz = Split-Path $PSScriptRoot -Parent
 $publicacao = Join-Path $raiz 'publish'
-$preservar = @('appsettings.Production.json', 'logs')   # nunca sobrescritos no servidor
+$preservar = @('appsettings.Production.json', 'licenca.lic', 'logs')   # nunca sobrescritos no servidor
 
 function Entrar-Manutencao {
     $html = '<!doctype html><html lang="pt-BR"><meta charset="utf-8"><title>Em manutenção</title><body style="font-family:sans-serif;text-align:center;padding:60px"><h1>Voltamos em instantes</h1><p>Estamos atualizando a loja.</p></body></html>'
@@ -86,7 +86,7 @@ if ($atuais) {
 # ------------------------------------------------------------------ cópia
 Entrar-Manutencao
 try {
-    robocopy $publicacao $PastaSite /MIR /XF app_offline.htm appsettings.Production.json /XD logs /NFL /NDL /NJH /NJS /NP | Out-Null
+    robocopy $publicacao $PastaSite /MIR /XF app_offline.htm appsettings.Production.json licenca.lic /XD logs /NFL /NDL /NJH /NJS /NP | Out-Null
     if ($LASTEXITCODE -ge 8) { throw "robocopy falhou (código $LASTEXITCODE)." }
 } finally {
     Sair-Manutencao

@@ -1,0 +1,66 @@
+@using PortalVendas.Application.WhatsApp
+@model WhatsAppIndexViewModel
+@{
+    ViewData["Title"] = "WhatsApp";
+    var urlBase = $"/admin/whatsapp?atendente={Model.SomenteAtendente}&termo={Uri.EscapeDataString(Model.Termo ?? "")}";
+}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <h1 class="h3 mb-0">Conversas do WhatsApp <small class="text-muted fs-6">(@Model.Conversas.TotalItens)</small></h1>
+    <a href="/admin/whatsapp/configuracao" class="btn btn-outline-primary btn-sm">Configuração</a>
+</div>
+
+@if (!Model.Configurado)
+{
+    <div class="alert alert-warning">O WhatsApp ainda não está configurado. <a href="/admin/whatsapp/configuracao" class="alert-link">Configurar agora</a></div>
+}
+else if (!Model.RoboAtivo)
+{
+    <div class="alert alert-info">O robô está desligado: as mensagens chegam aqui e só o atendente responde.</div>
+}
+
+<form method="get" class="row g-2 mb-3 align-items-end">
+    <div class="col-md-4">
+        <label for="termo" class="form-label small mb-0">Nome ou telefone</label>
+        <input id="termo" name="termo" class="form-control" value="@Model.Termo" />
+    </div>
+    <div class="col-md-4">
+        <div class="form-check mt-4">
+            <input class="form-check-input" type="checkbox" id="atendente" name="atendente" value="true" checked="@Model.SomenteAtendente" />
+            <label class="form-check-label" for="atendente">Só conversas com atendente</label>
+        </div>
+    </div>
+    <div class="col-md-2"><button class="btn btn-outline-primary w-100">Filtrar</button></div>
+</form>
+
+<div class="list-group conversas-lista">
+    @if (Model.Conversas.Itens.Count == 0)
+    {
+        <div class="list-group-item text-center text-muted py-4">Nenhuma conversa ainda. Quando um cliente mandar mensagem para o número da loja, ela aparece aqui.</div>
+    }
+    @foreach (var c in Model.Conversas.Itens)
+    {
+        <a href="/admin/whatsapp/conversa/@c.Id" class="list-group-item list-group-item-action d-flex gap-3 align-items-center">
+            <span class="conversa-avatar" aria-hidden="true">@((c.Cliente ?? c.Nome ?? "?").Trim()[..1].ToUpperInvariant())</span>
+            <span class="flex-grow-1 min-w-0">
+                <span class="d-flex justify-content-between gap-2">
+                    <strong class="text-truncate">@(c.Cliente ?? c.Nome ?? TelefoneWhatsApp.Formatar(c.Telefone))</strong>
+                    <small class="text-muted text-nowrap">@Formatacao.DataHora(c.UltimaMensagemEm)</small>
+                </span>
+                <span class="d-flex justify-content-between gap-2 small">
+                    <span class="text-muted text-truncate">@(c.UltimaFoiDoCliente ? "" : "Você: ")@c.UltimoTexto</span>
+                    <span class="text-nowrap">
+                        @if (c.AtendimentoHumano)
+                        {
+                            <span class="badge text-bg-warning">Atendente</span>
+                        }
+                        @if (c.NaoLidas > 0)
+                        {
+                            <span class="badge rounded-pill text-bg-success">@c.NaoLidas</span>
+                        }
+                    </span>
+                </span>
+            </span>
+        </a>
+    }
+</div>
+<partial name="_Paginacao" model="new Paginacao(Model.Conversas.PaginaAtual, Model.Conversas.TotalPaginas, urlBase)" />

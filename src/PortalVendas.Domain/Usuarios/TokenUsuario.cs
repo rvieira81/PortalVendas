@@ -3,7 +3,9 @@ namespace PortalVendas.Domain.Usuarios;
 public enum TipoToken : byte
 {
     ConfirmacaoEmail = 1,
-    RedefinicaoSenha = 2
+    RedefinicaoSenha = 2,
+    /// <summary>Link enviado no WhatsApp para o cliente pagar com cartão ou boleto no site sem criar senha.</summary>
+    AcessoWhatsApp = 3
 }
 
 public class TokenUsuario

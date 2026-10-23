@@ -1,0 +1,97 @@
+@using PortalVendas.Application.WhatsApp
+@model ConversaDetalhe
+@{
+    var r = Model.Resumo;
+    var titulo = r.Cliente ?? r.Nome ?? TelefoneWhatsApp.Formatar(r.Telefone);
+    ViewData["Title"] = "WhatsApp — " + titulo;
+}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+        <a href="/admin/whatsapp" class="small">&larr; Conversas</a>
+        <h1 class="h4 mb-0">@titulo</h1>
+        <div class="small text-muted">@TelefoneWhatsApp.Formatar(r.Telefone)@(r.Nome is not null && r.Cliente is not null ? $" · perfil: {r.Nome}" : "")</div>
+    </div>
+    <div class="d-flex gap-2">
+        @if (r.AtendimentoHumano)
+        {
+            <form method="post" action="/admin/whatsapp/devolver/@r.Id" asp-antiforgery="true" class="d-flex gap-2 align-items-center">
+                <div class="form-check small mb-0">
+                    <input class="form-check-input" type="checkbox" name="avisar" value="true" id="avisar" checked />
+                    <label class="form-check-label" for="avisar">avisar o cliente</label>
+                </div>
+                <button class="btn btn-sm btn-outline-primary">Devolver ao robô</button>
+            </form>
+        }
+        else
+        {
+            <form method="post" action="/admin/whatsapp/assumir/@r.Id" asp-antiforgery="true">
+                <button class="btn btn-sm btn-warning">Assumir conversa</button>
+            </form>
+        }
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-xl-8">
+        <div class="card">
+            <div class="card-body conversa-chat" id="chat" data-atualizar="15">
+                @if (Model.Mensagens.Count == 0)
+                {
+                    <p class="text-muted text-center my-4">Sem mensagens.</p>
+                }
+                @foreach (var m in Model.Mensagens)
+                {
+                    <div class="balao @(m.Entrada ? "balao-cliente" : m.Autor == EnvioWhatsAppService.AutorRobo ? "balao-robo" : "balao-atendente")">
+                        <div class="balao-texto">@m.Texto</div>
+                        <div class="balao-rodape">
+                            @(m.Entrada ? "" : m.Autor == EnvioWhatsAppService.AutorRobo ? "🤖 robô · " : $"{m.Autor} · ")@Formatacao.DataHora(m.CriadoEm)
+                            @if (m.Erro is not null)
+                            {
+                                <span class="text-danger" title="@m.Erro">⚠ não entregue</span>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+            <div class="card-footer bg-white">
+                @if (!Model.DentroDaJanela)
+                {
+                    <div class="small text-muted mb-2">Mais de 24 h sem mensagem do cliente: na API oficial da Meta só é possível responder depois que ele escrever de novo.</div>
+                }
+                <form method="post" action="/admin/whatsapp/responder/@r.Id" asp-antiforgery="true" class="d-flex gap-2 align-items-end">
+                    <label for="texto" class="visually-hidden">Mensagem</label>
+                    <textarea id="texto" name="texto" class="form-control" rows="2" maxlength="4000" placeholder="Escreva a resposta… (o robô para de responder esta conversa)" required></textarea>
+                    <button class="btn btn-primary">Enviar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-4">
+        <div class="card mb-3">
+            <div class="card-body small">
+                <h2 class="h6">Atendimento</h2>
+                <p class="mb-1">Quem responde: <strong>@(r.AtendimentoHumano ? "atendente" : "robô")</strong></p>
+                <p class="mb-0 text-muted">Etapa do robô: @Model.Etapa</p>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-body">
+                <h2 class="h6">Pedidos do cliente</h2>
+                @if (Model.Pedidos.Count == 0)
+                {
+                    <p class="small text-muted mb-0">@(r.Cliente is null ? "Cliente ainda não se cadastrou na conversa." : "Nenhum pedido.")</p>
+                }
+                <ul class="list-unstyled small mb-0">
+                    @foreach (var p in Model.Pedidos)
+                    {
+                        <li class="d-flex justify-content-between border-bottom py-1">
+                            <a href="/admin/pedidos/detalhe/@p.Id">nº @p.Numero</a>
+                            <span>@Formatacao.Moeda(p.Total)</span>
+                            <span class="badge text-bg-@p.Status.CorBootstrap()">@p.Status.Descricao()</span>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

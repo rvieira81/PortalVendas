@@ -7,6 +7,7 @@ using PortalVendas.Domain.Frete;
 using PortalVendas.Domain.Pagamentos;
 using PortalVendas.Domain.Pedidos;
 using PortalVendas.Domain.Usuarios;
+using PortalVendas.Domain.WhatsApp;
 
 namespace PortalVendas.Application.Abstracoes;
 
@@ -27,6 +28,8 @@ public interface IAppDbContext
     DbSet<NotificacaoGateway> NotificacoesGateway { get; }
     DbSet<FaixaFrete> FaixasFrete { get; }
     DbSet<Configuracao> Configuracoes { get; }
+    DbSet<ConversaWhatsApp> ConversasWhatsApp { get; }
+    DbSet<MensagemWhatsApp> MensagensWhatsApp { get; }
 
     DatabaseFacade Database { get; }
     ChangeTracker ChangeTracker { get; }

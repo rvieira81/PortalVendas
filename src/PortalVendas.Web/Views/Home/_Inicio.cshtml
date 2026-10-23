@@ -1,0 +1,153 @@
+@using PortalVendas.Application.Admin
+@model VitrineViewModel
+@inject IdentidadeLojaService Identidade
+@{
+    var loja = await Identidade.ObterOuPadraoAsync(Context.RequestAborted);
+    var configuracao = ViewData["ConfigLoja"] as ConfiguracaoLoja;
+    var fotosBanner = Model.Ofertas.Concat(Model.Novidades).Where(p => !string.IsNullOrEmpty(p.Imagem))
+        .DistinctBy(p => p.Id).Take(3).ToList();
+    var promocoes = Model.CategoriasComFoto.Where(c => c.Produtos > 0).Take(2).ToList();
+    string[] coresPromo = { "promo-quente", "promo-fria" };
+    var parcelasMax = configuracao?.ParcelasMaximas ?? 12;
+
+    // Se não houver "mais vendidos" de verdade ainda, a seção mostra as novidades (feito no serviço)
+    var vendidos = Model.MaisVendidos;
+    ViewDataDictionary Selo(int posicao) => new(ViewData) { ["SeloCard"] = posicao + "º" };
+}
+
+<div class="container inicio">
+    <section class="destaques" aria-label="Destaques">
+        <div class="banner">
+            <div class="banner-texto">
+                <span class="banner-selo">@loja.BannerSelo</span>
+                <h1>@loja.BannerTitulo</h1>
+                <p>@loja.BannerTexto</p>
+                <a href="@loja.BannerLink" class="banner-botao">@loja.BannerBotao</a>
+            </div>
+            @if (fotosBanner.Count > 0)
+            {
+                <div class="banner-fotos" aria-hidden="true">
+                    @foreach (var f in fotosBanner)
+                    {
+                        <img src="@Formatacao.UrlImagem(f.Imagem)" alt="" width="300" height="300" />
+                    }
+                </div>
+            }
+        </div>
+        @if (promocoes.Count > 0)
+        {
+            <div class="promos">
+                @for (var i = 0; i < promocoes.Count; i++)
+                {
+                    var c = promocoes[i];
+                    <a href="/categoria/@c.Slug" class="promo @coresPromo[i]">
+                        <span class="promo-texto">
+                            <span class="promo-rotulo">@c.Nome.ToUpperInvariant()</span>
+                            <strong>@c.Produtos @(c.Produtos == 1 ? "produto" : "produtos") para você escolher</strong>
+                            <span class="promo-link">Ver todos</span>
+                        </span>
+                        <img src="@Formatacao.UrlImagem(c.Imagem)" alt="" width="120" height="120" loading="lazy" />
+                    </a>
+                }
+            </div>
+        }
+    </section>
+
+    <section class="vantagens" aria-label="Vantagens">
+        <div>
+            <span class="vantagem-icone"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg></span>
+            @if (configuracao?.TemFreteGratis == true)
+            {
+                <span><strong>Frete grátis</strong>em compras acima de @Formatacao.Moeda(configuracao.FreteGratisAPartirDe)</span>
+            }
+            else
+            {
+                <span><strong>Frete na hora</strong>preço e prazo reais para o seu CEP</span>
+            }
+        </div>
+        <div>
+            <span class="vantagem-icone vantagem-verde"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 9 9-9 9-9-9z"/><path d="m8.5 12 3.5 3.5 3.5-3.5L12 8.5z"/></svg></span>
+            <span><strong>Pix na hora</strong>pagamento aprovado em segundos</span>
+        </div>
+        <div>
+            <span class="vantagem-icone"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h4"/></svg></span>
+            <span><strong>Até @(parcelasMax)x sem juros</strong>no cartão de crédito</span>
+        </div>
+        <div>
+            <span class="vantagem-icone"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg></span>
+            <span><strong>Compra segura</strong>cancele pelo site antes do envio</span>
+        </div>
+    </section>
+
+    @if (Model.CategoriasComFoto.Count > 0)
+    {
+        <section class="secao" aria-labelledby="t-categorias">
+            <div class="secao-topo"><h2 id="t-categorias">Compre por categoria</h2></div>
+            <div class="categorias-foto">
+                @foreach (var c in Model.CategoriasComFoto)
+                {
+                    <a href="/categoria/@c.Slug" class="categoria-foto">
+                        <img src="@Formatacao.UrlImagem(c.Imagem)" alt="" width="120" height="120" loading="lazy" />
+                        <span>@c.Nome</span>
+                    </a>
+                }
+            </div>
+        </section>
+    }
+
+    @if (Model.Ofertas.Count > 0)
+    {
+        <section class="secao" aria-labelledby="t-ofertas">
+            <div class="secao-topo">
+                <h2 id="t-ofertas">Ofertas</h2>
+                <a href="/busca?ordem=MenorPreco">Ver todos os produtos</a>
+            </div>
+            <div class="grade-cards">
+                @foreach (var p in Model.Ofertas)
+                {
+                    <partial name="_CardProduto" model="p" />
+                }
+            </div>
+        </section>
+    }
+
+    @if (vendidos.Count > 0)
+    {
+        <section class="secao" aria-labelledby="t-vendidos">
+            <div class="secao-topo">
+                <h2 id="t-vendidos">Mais vendidos</h2>
+                <a href="/busca">Ver todos</a>
+            </div>
+            <div class="grade-cards">
+                @for (var i = 0; i < vendidos.Count; i++)
+                {
+                    <partial name="_CardProduto" model="vendidos[i]" view-data="@Selo(i + 1)" />
+                }
+            </div>
+        </section>
+    }
+
+    @if (Model.Novidades.Count > 0)
+    {
+        <section class="secao" aria-labelledby="t-novidades">
+            <div class="secao-topo">
+                <h2 id="t-novidades">Novidades</h2>
+                <a href="/busca">Ver todos</a>
+            </div>
+            <div class="grade-cards">
+                @foreach (var p in Model.Novidades)
+                {
+                    <partial name="_CardProduto" model="p" />
+                }
+            </div>
+        </section>
+    }
+
+    @if (Model.Ofertas.Count == 0 && vendidos.Count == 0 && Model.Novidades.Count == 0)
+    {
+        <div class="vazio">
+            <h2>A vitrine está sendo montada</h2>
+            <p>Os produtos aparecem aqui assim que forem cadastrados no painel.</p>
+        </div>
+    }
+</div>
