@@ -73,7 +73,21 @@ Na primeira vez o script copia do projeto as fotos dos produtos, a `licenca.lic`
 **Se não abrir:** veja `C:\inetpub\PortalVendasLocal\logs` e o *Visualizador de Eventos → Logs do Windows → Aplicativo*
 (fonte "IIS AspNetCore Module V2"). Erro 500.19 = falta o Hosting Bundle; 500.30 = erro na inicialização (normalmente banco).
 
-## 3. Banco no SSMS
+## 3. E-mails de verdade no ambiente local
+
+Sem SMTP, os e-mails (confirmação de cadastro, senha, status do pedido) viram arquivos `.html` em `emails-dev\` (Visual Studio)
+ou `C:\PortalVendasLocal\emails\` (IIS). Para enviar de verdade:
+
+```powershell
+.\deploy\configurar-email.ps1 -Email suaconta@gmail.com      # pede a senha de app e manda um e-mail de teste
+```
+
+- **Gmail** (recomendado): crie uma *senha de app* em https://myaccount.google.com/apppasswords (precisa da verificação em duas etapas).
+- **Hotmail/Outlook.com** costumam recusar SMTP com senha; outros provedores: `-Provedor Outro -ServidorSmtp ... -Usuario ...`.
+- A conta fica nos *user-secrets* do projeto (fora do repositório). O Visual Studio usa na hora; para o IIS local rode
+  `rodar-iis-local.cmd` de novo. Para voltar aos arquivos: `.\deploy\configurar-email.ps1 -Desligar`.
+
+## 4. Banco no SSMS
 
 | Para ver o banco de... | Nome do servidor no SSMS | Autenticação |
 |---|---|---|

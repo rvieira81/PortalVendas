@@ -207,6 +207,12 @@ if (-not (Test-Path "IIS:\Sites\$NomeSite")) {
     New-WebBinding -Name $NomeSite -Protocol http -Port $PortaHttp
     Ok "Site $NomeSite criado ($url)."
 }
+else {
+    # Site já existe: as portas passadas agora valem (permite trocar com -PortaHttps/-PortaHttp)
+    Set-ItemProperty "IIS:\Sites\$NomeSite" -Name bindings -Value @(
+        @{ protocol = 'https'; bindingInformation = "*:${PortaHttps}:" },
+        @{ protocol = 'http'; bindingInformation = "*:${PortaHttp}:" })
+}
 & netsh http delete sslcert ipport=0.0.0.0:$PortaHttps 2>$null | Out-Null
 (Get-WebBinding -Name $NomeSite -Protocol https).AddSslCertificate($cert.Thumbprint, 'My')
 
@@ -283,6 +289,16 @@ if ($CriarAdmin) {
 
 # ------------------------------------------------------------------ subir e conferir
 Passo 'Subindo o site'
+if ((Get-WebsiteState -Name $NomeSite).Value -ne 'Started') {
+    foreach ($porta in @($PortaHttps, $PortaHttp)) {
+        $uso = Get-NetTCPConnection -LocalPort $porta -State Listen -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($uso) {
+            $dono = Get-Process -Id $uso.OwningProcess -ErrorAction SilentlyContinue
+            Falhar ("A porta $porta já está em uso por '$($dono.ProcessName)' (PID $($uso.OwningProcess)).`n" +
+                    "Rode de novo com outras portas, por exemplo: .\rodar-iis-local.cmd -Docker -PortaHttps 9443 -PortaHttp 9080")
+        }
+    }
+}
 Start-WebAppPool -Name $NomePool -ErrorAction SilentlyContinue
 if ((Get-WebsiteState -Name $NomeSite).Value -ne 'Started') { Start-Website -Name $NomeSite }
 $saudavel = $false
