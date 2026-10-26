@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using PortalVendas.Application.Admin;
 using PortalVendas.Application.Carrinhos;
 using PortalVendas.Application.Catalogo;
 using PortalVendas.Application.Comum;
@@ -20,6 +21,21 @@ public class VitrineViewModel
     public string? PrecoMax { get; init; }
     public OrdemVitrine Ordem { get; init; }
     public string? NomeCategoria => Categorias.FirstOrDefault(c => c.Slug == Categoria)?.Nome;
+
+    // ---- seções da página inicial (só preenchidas quando não há busca nem filtro)
+    public bool Inicio { get; init; }
+    public IReadOnlyList<CategoriaComFoto> CategoriasComFoto { get; init; } = Array.Empty<CategoriaComFoto>();
+    public IReadOnlyList<ProdutoResumo> Ofertas { get; init; } = Array.Empty<ProdutoResumo>();
+    public IReadOnlyList<ProdutoResumo> MaisVendidos { get; init; } = Array.Empty<ProdutoResumo>();
+    public IReadOnlyList<ProdutoResumo> Novidades { get; init; } = Array.Empty<ProdutoResumo>();
+}
+
+public class ProdutoPaginaViewModel
+{
+    public required ProdutoDetalhe Produto { get; init; }
+    public required ConfiguracaoLoja Configuracao { get; init; }
+    public IReadOnlyList<ProdutoResumo> Relacionados { get; init; } = Array.Empty<ProdutoResumo>();
+    public int Parcelas => Configuracao.ParcelasPermitidas(Produto.Preco);
 }
 
 public class EntrarViewModel

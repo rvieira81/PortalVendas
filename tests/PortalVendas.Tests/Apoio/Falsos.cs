@@ -1,3 +1,6 @@
+using PortalVendas.Application.WhatsApp;
+using PortalVendas.Application.Comum;
+using PortalVendas.Application.Licenciamento;
 using PortalVendas.Application.Abstracoes;
 using PortalVendas.Application.Frete;
 using PortalVendas.Application.Pagamentos;
@@ -28,6 +31,8 @@ public sealed class LinksFalsos : ILinksAplicacao
     public string RedefinirSenha(string token) => "https://teste/redefinir?token=" + token;
     public string Pedido(int pedidoId) => "https://teste/pedidos/" + pedidoId;
     public string Inicio() => "https://teste/";
+    public string AcessoWhatsApp(string token, int pedidoId) => $"https://teste/conta/acesso-whatsapp?token={token}&pedido={pedidoId}";
+    public string Imagem(string arquivo) => "https://teste/imagens/" + arquivo;
 }
 
 public sealed class ProvedorFreteFalso : IProvedorFrete
@@ -110,4 +115,74 @@ public sealed class GatewayFalso : IGatewayPagamento
         Pagamentos[r.Id] = r;
         return Task.FromResult(r);
     }
+}
+
+public sealed class LicencaFalsa : ILicencaLoja
+{
+    public EstadoLicenca Estado { get; set; } = new(SituacaoLicenca.Demonstracao, "sem licença", null);
+    public bool HostAutorizado(string host, bool requisicaoLocal) => requisicaoLocal;
+    public Task<Resultado> InstalarAsync(byte[] conteudo, CancellationToken ct = default) => Task.FromResult(Resultado.Falha("não usado"));
+
+    public static LicencaFalsa Valida(params string[] modulos) => new()
+    {
+        Estado = new EstadoLicenca(SituacaoLicenca.Valida, "ok", new DadosLicenca
+        {
+            NomeLoja = "Loja Teste",
+            RazaoSocial = "Loja Teste Ltda.",
+            Cnpj = "12345678000195",
+            Dominios = new[] { "lojateste.com.br" },
+            Modulos = modulos
+        })
+    };
+}
+
+public sealed class ImagensFalsas : IArmazenamentoImagens
+{
+    public List<string> Removidas { get; } = new();
+    public Task<string> SalvarAsync(byte[] conteudo, string extensao, CancellationToken ct = default) => Task.FromResult(Guid.NewGuid().ToString("N") + extensao);
+    public Task RemoverAsync(string arquivo, CancellationToken ct = default) { Removidas.Add(arquivo); return Task.CompletedTask; }
+}
+
+public sealed class CepFalso : ICepService
+{
+    public Task<EnderecoCep?> ConsultarAsync(string cep, CancellationToken ct = default) =>
+        Task.FromResult<EnderecoCep?>(cep == "99999999" ? null : new EnderecoCep(cep, "Rua das Flores", "Centro", "Campinas", "SP"));
+}
+
+public sealed class AssistenteFalso : IAssistenteVendas
+{
+    public InterpretacaoIA? Proxima { get; set; }
+    public int Chamadas { get; private set; }
+
+    public Task<InterpretacaoIA?> InterpretarAsync(string mensagem, ContextoLojaIA contexto, CancellationToken ct = default)
+    {
+        Chamadas++;
+        return Task.FromResult(Proxima);
+    }
+}
+
+public sealed class ConectorFalso : IConectorWhatsApp
+{
+    public List<(string Telefone, MensagemSaida Mensagem)> Enviadas { get; } = new();
+    public bool Falhar { get; set; }
+    public ProvedorWhatsApp Provedor { get; set; } = ProvedorWhatsApp.Evolution;
+
+    public Task<ResultadoEnvio> EnviarAsync(string telefone, MensagemSaida mensagem, CancellationToken ct = default)
+    {
+        if (Falhar) return Task.FromResult(ResultadoEnvio.Falha("falha simulada"));
+        Enviadas.Add((telefone, mensagem));
+        return Task.FromResult(ResultadoEnvio.Ok("saida-" + Enviadas.Count));
+    }
+
+    public Task<ResultadoEnvio> EnviarModeloAsync(string telefone, string modelo, string idioma, IReadOnlyList<string> parametros,
+        string textoAlternativo, CancellationToken ct = default) =>
+        EnviarAsync(telefone, MensagemSaida.Simples($"[modelo {modelo}] {string.Join(" | ", parametros)}"), ct);
+}
+
+public sealed class FabricaFalsa : IFabricaConectorWhatsApp
+{
+    private readonly ConectorFalso _conector;
+    public FabricaFalsa(ConectorFalso conector) => _conector = conector;
+    public bool Desligado { get; set; }
+    public Task<IConectorWhatsApp?> CriarAsync(CancellationToken ct = default) => Task.FromResult<IConectorWhatsApp?>(Desligado ? null : _conector);
 }

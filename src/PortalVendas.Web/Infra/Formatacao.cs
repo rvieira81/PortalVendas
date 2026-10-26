@@ -31,4 +31,11 @@ public static class Formatacao
         if (t.Contains(',')) return decimal.TryParse(t, NumberStyles.Number, PtBr, out valor);
         return decimal.TryParse(t, NumberStyles.Number, CultureInfo.InvariantCulture, out valor);
     }
+
+    /// <summary>"ou 10x de R$ 25,90 sem juros" respeitando parcela mínima e máximo de parcelas da loja.</summary>
+    public static string Parcelamento(decimal preco, PortalVendas.Application.Admin.ConfiguracaoLoja? configuracao)
+    {
+        var parcelas = configuracao?.ParcelasPermitidas(preco) ?? Math.Clamp((int)Math.Floor(preco / 10m), 1, 12);
+        return parcelas > 1 ? $"ou {parcelas}x de {Moeda(Math.Round(preco / parcelas, 2))} sem juros" : "à vista no Pix, cartão ou boleto";
+    }
 }

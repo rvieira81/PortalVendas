@@ -143,4 +143,124 @@
         };
         setTimeout(verificar, 5000);
     }
+
+    // ------------------------------------------------------------ mini carrinho (gaveta após "Adicionar ao carrinho")
+    const mini = document.getElementById('mini-carrinho');
+    if (mini) {
+        const fundo = document.querySelector('.mini-fundo');
+        const anterior = document.activeElement;
+        document.body.classList.add('mini-aberto');
+        mini.focus();
+        const fechar = () => {
+            mini.hidden = true;
+            if (fundo) fundo.hidden = true;
+            document.body.classList.remove('mini-aberto');
+            document.removeEventListener('keydown', teclado);
+            if (anterior && anterior.focus) anterior.focus();
+        };
+        const teclado = (ev) => {
+            if (ev.key === 'Escape') { fechar(); return; }
+            if (ev.key !== 'Tab') return;
+            // mantém o foco dentro da gaveta enquanto ela está aberta
+            const focaveis = mini.querySelectorAll('a[href], button:not([disabled])');
+            if (focaveis.length === 0) return;
+            const primeiro = focaveis[0], ultimo = focaveis[focaveis.length - 1];
+            if (ev.shiftKey && document.activeElement === primeiro) { ev.preventDefault(); ultimo.focus(); }
+            else if (!ev.shiftKey && document.activeElement === ultimo) { ev.preventDefault(); primeiro.focus(); }
+        };
+        document.addEventListener('keydown', teclado);
+        document.querySelectorAll('[data-mini-fechar]').forEach((b) => b.addEventListener('click', fechar));
+    }
+
+    // ------------------------------------------------------------ mostrar/ocultar (tabela de parcelas)
+    document.querySelectorAll('[data-alternar]').forEach((b) => b.addEventListener('click', () => {
+        const alvo = document.getElementById(b.dataset.alternar);
+        if (!alvo) return;
+        alvo.hidden = !alvo.hidden;
+        b.setAttribute('aria-expanded', String(!alvo.hidden));
+        b.textContent = alvo.hidden ? 'Ver todas as parcelas' : 'Ocultar parcelas';
+    }));
+
+    // ------------------------------------------------------------ botões − / + da quantidade
+    document.querySelectorAll('[data-qtd]').forEach((b) => b.addEventListener('click', () => {
+        const campo = b.parentElement.querySelector('input[type="number"]');
+        if (!campo) return;
+        const min = parseInt(campo.min || '1', 10), max = parseInt(campo.max || '99', 10);
+        const atual = parseInt(campo.value || '1', 10) || 1;
+        campo.value = Math.min(max, Math.max(min, atual + parseInt(b.dataset.qtd, 10)));
+    }));
+
+    // ------------------------------------------------------------ calculadora de frete da página do produto
+    document.querySelectorAll('[data-frete-produto]').forEach((caixa) => {
+        const campo = caixa.querySelector('input');
+        const botao = caixa.querySelector('[data-calcular-frete]');
+        const saida = caixa.querySelector('.pp-frete-resultado');
+        const quantidade = document.getElementById('quantidade');
+        const escapar = (t) => String(t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        try { const salvo = localStorage.getItem('pv-cep'); if (salvo && !campo.value) campo.value = mascaras.cep(salvo); } catch { /* sem armazenamento */ }
+
+        const calcular = async () => {
+            const cep = digitos(campo.value);
+            if (cep.length !== 8) { saida.innerHTML = '<span class="pp-frete-erro">Digite um CEP com 8 números.</span>'; return; }
+            botao.disabled = true;
+            saida.innerHTML = '<span class="text-secondary small">Consultando transportadoras…</span>';
+            try {
+                const q = new URLSearchParams({ produtoId: caixa.dataset.freteProduto, cep, quantidade: quantidade ? quantidade.value : '1' });
+                const resp = await fetch(`/api/frete?${q}`, { headers: { Accept: 'application/json' } });
+                const dados = await resp.json().catch(() => null);
+                if (!resp.ok) {
+                    saida.innerHTML = `<span class="pp-frete-erro">${escapar((dados && dados.mensagem) || (resp.status === 429 ? 'Muitas consultas seguidas. Tente em instantes.' : 'Não foi possível calcular agora.'))}</span>`;
+                    return;
+                }
+                try { localStorage.setItem('pv-cep', cep); } catch { /* sem armazenamento */ }
+                saida.innerHTML = dados.length === 0
+                    ? '<span class="pp-frete-erro">Nenhuma opção de entrega para este CEP.</span>'
+                    : dados.map((o) => `<div class="pp-frete-opcao"><span><strong>${escapar(o.descricao)}</strong><small>Chega em até ${escapar(o.prazo)}</small></span><strong>${escapar(o.valorTexto)}</strong></div>`).join('');
+            } catch {
+                saida.innerHTML = '<span class="pp-frete-erro">Não foi possível calcular agora. Tente de novo.</span>';
+            } finally {
+                botao.disabled = false;
+            }
+        };
+        botao.addEventListener('click', calcular);
+        campo.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') { ev.preventDefault(); calcular(); } });
+    });
+
+    // ------------------------------------------------------------ painel: cores da identidade da loja
+    document.querySelectorAll('[data-cor-para]').forEach((b) => b.addEventListener('click', () => {
+        const campo = document.getElementById(b.dataset.corPara);
+        if (!campo) return;
+        campo.value = b.dataset.cor;
+        campo.dispatchEvent(new Event('input'));
+    }));
+    const previa = document.getElementById('previa-marca');
+    document.querySelectorAll('input[data-previa]').forEach((c) => c.addEventListener('input', () => {
+        if (previa) previa.style.setProperty(c.dataset.previa, c.value);
+    }));
+
+    // ------------------------------------------------------------ painel WhatsApp: provedor, histórico e atualização
+    const radiosProvedor = document.querySelectorAll('input[name="Provedor"]');
+    if (radiosProvedor.length) {
+        const ajustar = () => radiosProvedor.forEach((r) => {
+            if (!r.dataset.mostrar) return;
+            const bloco = document.getElementById(r.dataset.mostrar);
+            if (bloco) bloco.hidden = !r.checked;
+        });
+        radiosProvedor.forEach((r) => r.addEventListener('change', ajustar));
+        ajustar();
+    }
+    const chat = document.querySelector('[data-atualizar]');
+    if (chat) {
+        chat.scrollTop = chat.scrollHeight;
+        const resposta = document.getElementById('texto');
+        const segundos = parseInt(chat.dataset.atualizar, 10) || 15;
+        // Recarrega para mostrar mensagens novas, sem atrapalhar quem está digitando
+        setInterval(() => {
+            if (resposta && (resposta.value.trim() !== '' || document.activeElement === resposta)) return;
+            window.location.reload();
+        }, segundos * 1000);
+    }
+
+    // Histórico de conversa: começa mostrando a mensagem mais recente
+    document.querySelectorAll('[data-rolar-fim]').forEach((e) => { e.scrollTop = e.scrollHeight; });
 })();

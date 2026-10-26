@@ -10,7 +10,8 @@ using PortalVendas.Domain.Pedidos;
 
 namespace PortalVendas.Application.Pedidos;
 
-public record ComandoCriarPedido(int UsuarioId, Guid ChaveIdempotencia, int EnderecoId, string CodigoFrete);
+public record ComandoCriarPedido(int UsuarioId, Guid ChaveIdempotencia, int EnderecoId, string CodigoFrete,
+    OrigemPedido Origem = OrigemPedido.Site);
 
 public class CheckoutService
 {
@@ -60,7 +61,9 @@ public class CheckoutService
 
         var usuario = await _db.Usuarios.AsNoTracking().FirstOrDefaultAsync(u => u.Id == cmd.UsuarioId, ct);
         if (usuario is null || usuario.Anonimizado) return Resultado<int>.Falha("Conta não encontrada.");
-        if (!usuario.EmailConfirmado) return Resultado<int>.Falha("Confirme seu e-mail antes de finalizar a compra.");
+        // No WhatsApp o cliente é identificado pelo próprio número; o e-mail é opcional
+        if (!usuario.EmailConfirmado && cmd.Origem != OrigemPedido.WhatsApp)
+            return Resultado<int>.Falha("Confirme seu e-mail antes de finalizar a compra.");
         if (string.IsNullOrEmpty(usuario.Cpf)) return Resultado<int>.Falha("Informe seu CPF em Minha conta antes de finalizar a compra.");
 
         var endereco = await _db.Enderecos.AsNoTracking()
@@ -96,7 +99,8 @@ public class CheckoutService
             frete.PrazoDias,
             desconto: 0m,
             agora,
-            Autores.Cliente(cmd.UsuarioId));
+            Autores.Cliente(cmd.UsuarioId),
+            cmd.Origem);
 
         var estrategia = _db.Database.CreateExecutionStrategy();
         Resultado<int> resultado;

@@ -10,7 +10,8 @@ public record ProdutoMaisVendido(int ProdutoId, string Nome, int Quantidade, dec
 public record PainelVendas(
     DateOnly De, DateOnly Ate, decimal Faturamento, int PedidosPagos, decimal TicketMedio,
     int AguardandoPagamento, int ParaSeparar, int ParaEnviar, IReadOnlyList<ProdutoMaisVendido> MaisVendidos,
-    IReadOnlyList<(DateOnly Dia, decimal Valor)> PorDia);
+    IReadOnlyList<(DateOnly Dia, decimal Valor)> PorDia,
+    decimal FaturamentoWhatsApp = 0, int PedidosWhatsApp = 0);
 
 /// <summary>RF20: indicadores de vendas por período (datas no horário de Brasília).</summary>
 public class DashboardService
@@ -40,7 +41,8 @@ public class DashboardService
         var pagos = _db.Pedidos.AsNoTracking()
             .Where(p => p.PagoEm >= inicioUtc && p.PagoEm < fimUtc && StatusFaturados.Contains(p.Status));
 
-        var linhas = await pagos.Select(p => new { p.PagoEm, p.Total }).ToListAsync(ct);
+        var linhas = await pagos.Select(p => new { p.PagoEm, p.Total, p.Origem }).ToListAsync(ct);
+        var doWhatsApp = linhas.Where(l => l.Origem == OrigemPedido.WhatsApp).ToList();
         var faturamento = linhas.Sum(l => l.Total);
         var quantidade = linhas.Count;
 
@@ -70,6 +72,7 @@ public class DashboardService
             inicio, fim, faturamento, quantidade, quantidade == 0 ? 0 : Math.Round(faturamento / quantidade, 2),
             Contar(StatusPedido.AguardandoPagamento), Contar(StatusPedido.Pago), Contar(StatusPedido.EmSeparacao),
             maisVendidos.Select(m => new ProdutoMaisVendido(m.ProdutoId, m.NomeProduto, m.Quantidade, m.Valor)).ToList(),
-            serie);
+            serie,
+            doWhatsApp.Sum(l => l.Total), doWhatsApp.Count);
     }
 }

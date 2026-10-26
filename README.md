@@ -11,6 +11,9 @@ Loja virtual de um vendedor em **C# / ASP.NET Core MVC (.NET 10)** com **SQL Ser
 | [docs/05-testes.md](docs/05-testes.md) | Plano de testes, rastreabilidade e roteiros manuais |
 | [docs/06-implantacao.md](docs/06-implantacao.md) | IIS, segredos, publicação, rollback e go-live |
 | [docs/07-manual.md](docs/07-manual.md) | Manual do cliente e do administrador |
+| [docs/08-licenciamento.md](docs/08-licenciamento.md) | Licença por loja (nome, CNPJ, domínio) e identidade visual |
+| [docs/09-whatsapp.md](docs/09-whatsapp.md) | Módulo de vendas e atendimento pelo WhatsApp (Meta ou Evolution, IA opcional) |
+| [docs/10-ambiente-local.md](docs/10-ambiente-local.md) | Rodar na sua máquina: Visual Studio, IIS local (`rodar-iis-local.cmd`) e banco no SSMS |
 
 ## Rodar localmente
 
@@ -40,6 +43,12 @@ Em desenvolvimento os e-mails (confirmação de cadastro, pedidos) são gravados
 
 Para testar o **webhook** localmente, exponha a porta com um túnel (ngrok, Dev Tunnels do Visual Studio) e configure a URL pública no painel do Mercado Pago e em `MercadoPago:UrlNotificacao`. Sem webhook, o job de conciliação confirma os pagamentos em até 10 minutos.
 
+## Licença e identidade da loja
+
+Nome, razão social, CNPJ e domínios vêm do arquivo `licenca.lic`, assinado pelo fornecedor; logo, cores, contatos e banner
+o lojista altera em **Painel → Identidade da loja**. Sem licença o site roda como demonstração, só em `localhost`.
+Gerar chaves e emitir licenças: [docs/08-licenciamento.md](docs/08-licenciamento.md).
+
 ## Testes
 
 ```powershell
@@ -47,6 +56,17 @@ dotnet test PortalVendas.sln
 ```
 
 97 casos: regras de domínio, serviços com banco SQLite em memória (estoque atômico, idempotência, webhook, expiração, estorno, IDOR, bloqueio de login, MFA) e leitura das respostas do Mercado Pago e do Melhor Envio.
+
+## Docker
+
+```bash
+docker build -t portalvendas-web .
+docker run -p 8080:8080 \
+  -e ConnectionStrings__PortalVendas="Server=...;Database=PortalVendas;..." \
+  portalvendas-web
+```
+
+A imagem roda como usuário sem privilégios e escuta na porta 8080. Segredos e `appsettings.Production.json` não entram na imagem (ver `.dockerignore`); passe-os por variáveis de ambiente.
 
 ## Estrutura
 

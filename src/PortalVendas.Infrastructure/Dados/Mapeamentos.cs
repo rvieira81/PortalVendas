@@ -6,6 +6,7 @@ using PortalVendas.Domain.Frete;
 using PortalVendas.Domain.Pagamentos;
 using PortalVendas.Domain.Pedidos;
 using PortalVendas.Domain.Usuarios;
+using PortalVendas.Domain.WhatsApp;
 
 namespace PortalVendas.Infrastructure.Dados;
 
@@ -248,7 +249,35 @@ internal sealed class ConfiguracaoMap : IEntityTypeConfiguration<Configuracao>
         b.ToTable("Configuracao");
         b.HasKey(x => x.Chave);
         b.Property(x => x.Chave).HasMaxLength(100).IsUnicode(false);
-        b.Property(x => x.Valor).HasMaxLength(500).IsRequired();
+        b.Property(x => x.Valor).HasMaxLength(2000).IsRequired();
         b.Property(x => x.AlteradoPor).HasMaxLength(100);
+    }
+}
+
+internal sealed class ConversaWhatsAppMap : IEntityTypeConfiguration<ConversaWhatsApp>
+{
+    public void Configure(EntityTypeBuilder<ConversaWhatsApp> b)
+    {
+        b.ToTable("ConversaWhatsApp");
+        b.HasKey(x => x.Id);
+        b.Property(x => x.Telefone).HasMaxLength(20).IsUnicode(false).IsRequired();
+        b.Property(x => x.NomeContato).HasMaxLength(150);
+        b.HasIndex(x => x.Telefone).IsUnique();
+        b.HasOne<Usuario>().WithMany().HasForeignKey(x => x.UsuarioId).OnDelete(DeleteBehavior.SetNull);
+        b.HasMany(x => x.Mensagens).WithOne().HasForeignKey(m => m.ConversaId).OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
+internal sealed class MensagemWhatsAppMap : IEntityTypeConfiguration<MensagemWhatsApp>
+{
+    public void Configure(EntityTypeBuilder<MensagemWhatsApp> b)
+    {
+        b.ToTable("MensagemWhatsApp");
+        b.HasKey(x => x.Id);
+        b.Property(x => x.Texto).HasMaxLength(4000).IsRequired();
+        b.Property(x => x.IdExterno).HasMaxLength(200).IsUnicode(false);
+        b.Property(x => x.Autor).HasMaxLength(100);
+        b.Property(x => x.Erro).HasMaxLength(500);
+        b.HasIndex(x => x.IdExterno).IsUnique().HasFilter("[IdExterno] IS NOT NULL");
     }
 }

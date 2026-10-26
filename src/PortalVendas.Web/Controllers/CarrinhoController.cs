@@ -25,13 +25,17 @@ public class CarrinhoController : Controller
 
     /// <summary>RF04</summary>
     [HttpPost("adicionar")]
-    public async Task<IActionResult> Adicionar(int produtoId, int quantidade = 1, string? retornarPara = null, CancellationToken ct = default)
+    public async Task<IActionResult> Adicionar(int produtoId, int quantidade = 1, string? retornarPara = null, bool abrirMini = false, CancellationToken ct = default)
     {
         var resultado = await _carrinhos.AdicionarAsync(_contexto.Identificacao, produtoId, quantidade, ct);
         if (resultado.Sucesso)
         {
             _contexto.GravarToken(resultado.Valor);
-            TempData[resultado.Erro is null ? "Sucesso" : "Aviso"] = resultado.Erro ?? "Produto adicionado ao carrinho.";
+            // Com o mini carrinho aberto, a confirmação já aparece nele: só avisos vão para a faixa de mensagens
+            if (abrirMini && resultado.Erro is null)
+                TempData["MiniCarrinho"] = true;
+            else
+                TempData[resultado.Erro is null ? "Sucesso" : "Aviso"] = resultado.Erro ?? "Produto adicionado ao carrinho.";
         }
         else
         {

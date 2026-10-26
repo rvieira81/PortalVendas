@@ -6,6 +6,7 @@ using PortalVendas.Domain.Frete;
 using PortalVendas.Domain.Pagamentos;
 using PortalVendas.Domain.Pedidos;
 using PortalVendas.Domain.Usuarios;
+using PortalVendas.Domain.WhatsApp;
 
 namespace PortalVendas.Infrastructure.Dados;
 
@@ -32,6 +33,8 @@ public class AppDbContext : DbContext, IAppDbContext
     public DbSet<NotificacaoGateway> NotificacoesGateway => Set<NotificacaoGateway>();
     public DbSet<FaixaFrete> FaixasFrete => Set<FaixaFrete>();
     public DbSet<Configuracao> Configuracoes => Set<Configuracao>();
+    public DbSet<ConversaWhatsApp> ConversasWhatsApp => Set<ConversaWhatsApp>();
+    public DbSet<MensagemWhatsApp> MensagensWhatsApp => Set<MensagemWhatsApp>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -19,6 +19,7 @@ param(
     [Parameter(Mandatory)] [string] $Servidor,
     [Parameter(Mandatory)] [string] $Banco,
     [string] $Usuario,
+    [System.Management.Automation.PSCredential] $Credencial,
     [switch] $CriarBanco,
     [switch] $ComSeed,
     [switch] $SomenteListar
@@ -27,8 +28,8 @@ param(
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Data
 
-$cred = $null
-if ($Usuario) { $cred = Get-Credential -UserName $Usuario -Message "Senha do usuário SQL $Usuario" }
+$cred = $Credencial
+if (-not $cred -and $Usuario) { $cred = Get-Credential -UserName $Usuario -Message "Senha do usuário SQL $Usuario" }
 
 function New-ConnectionString([string] $database) {
     $b = New-Object System.Data.SqlClient.SqlConnectionStringBuilder

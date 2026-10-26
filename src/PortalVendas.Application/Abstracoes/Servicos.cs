@@ -58,5 +58,9 @@ public interface ILinksAplicacao
     string ConfirmarEmail(string token);
     string RedefinirSenha(string token);
     string Pedido(int pedidoId);
+    /// <summary>Link do WhatsApp que entra na conta (sem senha) e abre o pagamento do pedido.</summary>
+    string AcessoWhatsApp(string token, int pedidoId);
+    /// <summary>URL pública de uma imagem de produto (o WhatsApp baixa a foto por ela).</summary>
+    string Imagem(string arquivo);
     string Inicio();
 }

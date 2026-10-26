@@ -98,3 +98,43 @@ public static class Uf
 
     public static bool EhValida(string? uf) => uf is { Length: 2 } && Validas.Contains(uf);
 }
+
+/// <summary>
+/// Validação e formatação de CNPJ, inclusive o CNPJ alfanumérico (IN RFB nº 2.229/2024):
+/// as 12 primeiras posições aceitam 0-9 e A-Z (valor = código ASCII − 48); os 2 dígitos verificadores continuam numéricos.
+/// </summary>
+public static class Cnpj
+{
+    private static readonly int[] PesosDv1 = { 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2 };
+    private static readonly int[] PesosDv2 = { 6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2 };
+
+    /// <summary>Mantém só letras e números, em maiúsculas.</summary>
+    public static string Normalizar(string? valor) =>
+        string.IsNullOrEmpty(valor) ? string.Empty : new string(valor.Where(char.IsAsciiLetterOrDigit).Select(char.ToUpperInvariant).ToArray());
+
+    public static bool EhValido(string? valor)
+    {
+        var cnpj = Normalizar(valor);
+        if (cnpj.Length != 14) return false;
+        if (!cnpj[..12].All(c => char.IsAsciiDigit(c) || char.IsAsciiLetterUpper(c))) return false;
+        if (!char.IsAsciiDigit(cnpj[12]) || !char.IsAsciiDigit(cnpj[13])) return false;
+        if (cnpj.All(c => c == cnpj[0])) return false;
+
+        return cnpj[12] - '0' == Digito(cnpj, PesosDv1) && cnpj[13] - '0' == Digito(cnpj, PesosDv2);
+    }
+
+    private static int Digito(string cnpj, int[] pesos)
+    {
+        var soma = 0;
+        for (var i = 0; i < pesos.Length; i++) soma += (cnpj[i] - '0') * pesos[i];
+        var resto = soma % 11;
+        return resto < 2 ? 0 : 11 - resto;
+    }
+
+    /// <summary>12345678000195 → 12.345.678/0001-95</summary>
+    public static string Formatar(string? valor)
+    {
+        var c = Normalizar(valor);
+        return c.Length == 14 ? $"{c[..2]}.{c[2..5]}.{c[5..8]}/{c[8..12]}-{c[12..]}" : c;
+    }
+}
