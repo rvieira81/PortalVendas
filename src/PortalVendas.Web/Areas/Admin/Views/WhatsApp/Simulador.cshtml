@@ -1,0 +1,117 @@
+@using System.Text.RegularExpressions
+@using PortalVendas.Application.WhatsApp
+@model WhatsAppSimuladorViewModel
+@{
+    ViewData["Title"] = "Simulador do WhatsApp";
+    var c = Model.Conversa;
+    // Botões rápidos com as opções numeradas da última resposta do robô
+    var ultimaDoRobo = c?.Mensagens.LastOrDefault(m => !m.Entrada)?.Texto ?? "";
+    var opcoes = Regex.Matches(ultimaDoRobo, @"^(\d+)\. (.+)$", RegexOptions.Multiline)
+        .Select(m => (Numero: m.Groups[1].Value, Titulo: m.Groups[2].Value.Trim())).ToList();
+}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+        <a href="/admin/whatsapp" class="small">&larr; Conversas</a>
+        <h1 class="h3 mb-0">Simulador do WhatsApp</h1>
+        <div class="small text-muted">Você escreve como cliente; o robô responde como responderia no WhatsApp. Nada é enviado de verdade.</div>
+    </div>
+    @if (c is not null)
+    {
+        <form method="post" action="/admin/whatsapp/apagarsimulacao" asp-antiforgery="true">
+            <input type="hidden" name="telefone" value="@Model.Telefone" />
+            <button class="btn btn-sm btn-outline-danger">Recomeçar teste</button>
+        </form>
+    }
+</div>
+
+@if (!Model.Ativo)
+{
+    <div class="alert alert-warning">
+        Para usar o simulador, escolha o provedor <strong>Simulador</strong> em
+        <a href="/admin/whatsapp/configuracao" class="alert-link">Configuração</a> e salve.
+        (Com a Meta ou a Evolution configuradas, as respostas iriam para um WhatsApp de verdade.)
+    </div>
+}
+else if (!Model.RoboAtivo)
+{
+    <div class="alert alert-info">O robô está desligado na configuração: as mensagens chegam, mas ninguém responde automaticamente.</div>
+}
+
+<div class="row g-4">
+    <div class="col-xl-8">
+        <div class="card">
+            <div class="card-header bg-white d-flex justify-content-between small">
+                <span><strong>Cliente Teste</strong> · @TelefoneWhatsApp.Formatar(Model.Telefone)</span>
+                @if (c is not null)
+                {
+                    <a href="/admin/whatsapp/conversa/@c.Resumo.Id">ver como atendente</a>
+                }
+            </div>
+            <div class="card-body conversa-chat" id="chat" data-rolar-fim>
+                @if (c is null || c.Mensagens.Count == 0)
+                {
+                    <p class="text-muted text-center my-4">Mande um "oi" para começar.</p>
+                }
+                else
+                {
+                    @foreach (var m in c.Mensagens)
+                    {
+                        <!-- No simulador o cliente fica à direita, como no celular dele -->
+                        <div class="balao @(m.Entrada ? "balao-atendente" : "balao-cliente")">
+                            <div class="balao-texto">@m.Texto</div>
+                            <div class="balao-rodape">@(m.Entrada ? "você" : m.Autor) · @Formatacao.DataHora(m.CriadoEm)</div>
+                        </div>
+                    }
+                }
+            </div>
+            <div class="card-footer bg-white">
+                @if (opcoes.Count > 0)
+                {
+                    <div class="d-flex flex-wrap gap-2 mb-2">
+                        @foreach (var o in opcoes)
+                        {
+                            <form method="post" action="/admin/whatsapp/simular" asp-antiforgery="true">
+                                <input type="hidden" name="telefone" value="@Model.Telefone" />
+                                <input type="hidden" name="texto" value="@o.Numero" />
+                                <button class="btn btn-sm btn-outline-success">@o.Numero. @o.Titulo</button>
+                            </form>
+                        }
+                    </div>
+                }
+                <form method="post" action="/admin/whatsapp/simular" asp-antiforgery="true" class="d-flex gap-2">
+                    <input type="hidden" name="telefone" value="@Model.Telefone" />
+                    <label for="texto-sim" class="visually-hidden">Mensagem do cliente</label>
+                    <input id="texto-sim" name="texto" class="form-control" maxlength="1000" autocomplete="off" autofocus
+                           placeholder="Escreva como cliente: oi, 1, fone bluetooth, atendente…" />
+                    <button class="btn btn-success" disabled="@(!Model.Ativo)">Enviar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-4">
+        <div class="card mb-3">
+            <div class="card-body small">
+                <h2 class="h6">Roteiro de teste</h2>
+                <ol class="mb-0 ps-3">
+                    <li>"oi" → menu</li>
+                    <li>1 → categorias → produto → Adicionar → quantidade</li>
+                    <li>Finalizar compra → nome, CPF válido (ex.: 529.982.247-25), Pular e-mail</li>
+                    <li>CEP (ex.: 13084-000) → número → Pular complemento → frete</li>
+                    <li>Pagar com Pix: o código vem do Mercado Pago de teste</li>
+                    <li>Veja o pedido em <a href="/admin/pedidos?origem=WhatsApp">Pedidos (canal WhatsApp)</a> e mude o status: o aviso aparece aqui</li>
+                    <li>"atendente" → responda pela tela do atendente</li>
+                </ol>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-body small">
+                <h2 class="h6">Outro cliente</h2>
+                <form method="get" action="/admin/whatsapp/simulador" class="input-group input-group-sm">
+                    <input name="telefone" class="form-control" value="@TelefoneWhatsApp.Formatar(Model.Telefone)" aria-label="Telefone do cliente de teste" />
+                    <button class="btn btn-outline-secondary">Trocar</button>
+                </form>
+                <div class="form-text">Cada número é um cliente diferente (o cadastro feito na conversa fica nesse número).</div>
+            </div>
+        </div>
+    </div>
+</div>

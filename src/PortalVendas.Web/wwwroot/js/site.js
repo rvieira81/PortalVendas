@@ -260,4 +260,7 @@
             window.location.reload();
         }, segundos * 1000);
     }
+
+    // Histórico de conversa: começa mostrando a mensagem mais recente
+    document.querySelectorAll('[data-rolar-fim]').forEach((e) => { e.scrollTop = e.scrollHeight; });
 })();

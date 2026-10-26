@@ -91,6 +91,26 @@ public class IntegracaoWhatsAppTests
     }
 
     [Fact]
+    public async Task Simulador_aceita_tudo_sem_enviar()
+    {
+        var conector = new ConectorSimulador();
+        var r = await conector.EnviarAsync("5511900000001", MensagemSaida.Simples("oi"));
+        Assert.True(r.Sucesso);
+        Assert.StartsWith("sim:", r.IdExterno);
+        Assert.Equal(ProvedorWhatsApp.Simulador, conector.Provedor);
+    }
+
+    [Fact]
+    public async Task Configuracao_aceita_o_simulador_sem_credenciais()
+    {
+        using var c = new Cenario();
+        var r = await c.ConfiguracaoWhatsApp.SalvarAsync(new EdicaoConfiguracaoWhatsApp(ProvedorWhatsApp.Simulador, true, null,
+            null, null, null, null, null, null, null, null, false, null, null), "admin");
+        Assert.True(r.Sucesso, r.Erro);
+        Assert.Equal(ProvedorWhatsApp.Simulador, (await c.ConfiguracaoWhatsApp.ObterAsync()).Provedor);
+    }
+
+    [Fact]
     public void Resposta_da_ia_sem_json_vira_null() => Assert.Null(AssistenteClaude.Interpretar("não sei"));
 
     [Fact]

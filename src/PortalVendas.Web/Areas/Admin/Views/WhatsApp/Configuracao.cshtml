@@ -26,6 +26,10 @@
                         <label class="form-check-label" for="p1"><strong>API oficial da Meta</strong> (WhatsApp Cloud API) — recomendada: sem risco de bloqueio, com botões e listas</label>
                     </div>
                     <div class="form-check">
+                        <input class="form-check-input" type="radio" name="Provedor" id="p3" value="@ProvedorWhatsApp.Simulador" checked="@(Model.Provedor == ProvedorWhatsApp.Simulador)" />
+                        <label class="form-check-label" for="p3"><strong>Simulador</strong> — testes no painel, sem WhatsApp (nada é enviado de verdade)</label>
+                    </div>
+                    <div class="form-check">
                         <input class="form-check-input" type="radio" name="Provedor" id="p2" value="@ProvedorWhatsApp.Evolution" checked="@(Model.Provedor == ProvedorWhatsApp.Evolution)" data-mostrar="cfg-evolution" />
                         <label class="form-check-label" for="p2"><strong>Evolution API</strong> (não oficial) — usa o número atual lendo o QR Code; a Meta pode bloquear o número</label>
                     </div>

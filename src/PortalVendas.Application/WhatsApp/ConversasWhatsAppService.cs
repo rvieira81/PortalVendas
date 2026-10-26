@@ -72,6 +72,22 @@ public sealed class ConversasWhatsAppService
             pagina, TamanhoPagina, total);
     }
 
+    public async Task<int?> ObterIdPorTelefoneAsync(string telefone, CancellationToken ct = default)
+    {
+        var t = TelefoneWhatsApp.Normalizar(telefone);
+        return await _db.ConversasWhatsApp.Where(c => c.Telefone == t).Select(c => (int?)c.Id).FirstOrDefaultAsync(ct);
+    }
+
+    /// <summary>Apaga a conversa e o histórico (usado pelo simulador para recomeçar o teste).</summary>
+    public async Task ApagarAsync(int id, CancellationToken ct = default)
+    {
+        var c = await _db.ConversasWhatsApp.FirstOrDefaultAsync(x => x.Id == id, ct);
+        if (c is null) return;
+        _db.MensagensWhatsApp.RemoveRange(_db.MensagensWhatsApp.Where(m => m.ConversaId == id));
+        _db.ConversasWhatsApp.Remove(c);
+        await _db.SaveChangesAsync(ct);
+    }
+
     public Task<int> ContarAguardandoAtendenteAsync(CancellationToken ct = default) =>
         _db.ConversasWhatsApp.CountAsync(c => c.AtendimentoHumano && c.NaoLidas > 0, ct);
 

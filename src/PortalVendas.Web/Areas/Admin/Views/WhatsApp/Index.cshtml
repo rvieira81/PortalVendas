@@ -6,7 +6,10 @@
 }
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
     <h1 class="h3 mb-0">Conversas do WhatsApp <small class="text-muted fs-6">(@Model.Conversas.TotalItens)</small></h1>
-    <a href="/admin/whatsapp/configuracao" class="btn btn-outline-primary btn-sm">Configuração</a>
+    <div class="d-flex gap-2">
+        <a href="/admin/whatsapp/simulador" class="btn btn-outline-success btn-sm">Simulador</a>
+        <a href="/admin/whatsapp/configuracao" class="btn btn-outline-primary btn-sm">Configuração</a>
+    </div>
 </div>
 
 @if (!Model.Configurado)

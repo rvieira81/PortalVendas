@@ -37,6 +37,54 @@ public class WhatsAppController : AdminControllerBase
         });
     }
 
+    // ================================================================== simulador (testes sem WhatsApp)
+
+    public const string TelefoneSimulador = "5511900000001";
+
+    public async Task<IActionResult> Simulador(string? telefone, CancellationToken ct)
+    {
+        if (!_configuracao.Licenciado) return View("SemModulo");
+        var config = await _configuracao.ObterAsync(ct);
+        var numero = TelefoneWhatsApp.Normalizar(string.IsNullOrWhiteSpace(telefone) ? TelefoneSimulador : telefone);
+        var id = await _conversas.ObterIdPorTelefoneAsync(numero, ct);
+        return View(new WhatsAppSimuladorViewModel
+        {
+            Telefone = numero,
+            Ativo = config.Provedor == ProvedorWhatsApp.Simulador,
+            RoboAtivo = config.RoboAtivo,
+            Conversa = id is null ? null : await _conversas.AbrirAsync(id.Value, ct)
+        });
+    }
+
+    /// <summary>Faz de conta que o cliente mandou a mensagem: grava e processa na hora (sem passar pela fila).</summary>
+    [HttpPost]
+    public async Task<IActionResult> Simular(string telefone, string? nome, string? texto,
+        [FromServices] ProcessadorWhatsAppService processador, CancellationToken ct)
+    {
+        var config = await _configuracao.ObterAsync(ct);
+        if (config.Provedor != ProvedorWhatsApp.Simulador)
+        {
+            Erro("Escolha o provedor \"Simulador\" na configuração do WhatsApp para testar sem enviar mensagens de verdade.");
+            return RedirectToAction(nameof(Simulador), new { telefone });
+        }
+        if (!string.IsNullOrWhiteSpace(texto))
+        {
+            var id = await processador.RegistrarEntradaAsync(new MensagemRecebida(telefone, string.IsNullOrWhiteSpace(nome) ? "Cliente Teste" : nome,
+                texto.Trim(), null, "sim-in:" + Guid.NewGuid().ToString("N"), DateTime.UtcNow), ct);
+            if (id is not null) await processador.ProcessarAsync(id.Value, ct);
+        }
+        return RedirectToAction(nameof(Simulador), new { telefone });
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> ApagarSimulacao(string telefone, CancellationToken ct)
+    {
+        var id = await _conversas.ObterIdPorTelefoneAsync(telefone, ct);
+        if (id is not null) await _conversas.ApagarAsync(id.Value, ct);
+        Sucesso("Conversa de teste apagada. O próximo \"oi\" começa do zero (o cadastro do cliente de teste continua).");
+        return RedirectToAction(nameof(Simulador), new { telefone });
+    }
+
     public async Task<IActionResult> Conversa(int id, CancellationToken ct)
     {
         if (!_configuracao.Licenciado) return View("SemModulo");

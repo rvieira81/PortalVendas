@@ -23,6 +23,7 @@ public sealed class FabricaConectorWhatsApp : IFabricaConectorWhatsApp
         {
             ProvedorWhatsApp.Meta when c.MetaCompleta => new ConectorMeta(Cliente(ConectorMeta.UrlGraph), c.MetaPhoneNumberId!, c.MetaToken!),
             ProvedorWhatsApp.Evolution when c.EvolutionCompleta => new ConectorEvolution(Cliente(null), c.EvolutionUrl!, c.EvolutionInstancia!, c.EvolutionApiKey!),
+            ProvedorWhatsApp.Simulador => new ConectorSimulador(),
             _ => null
         };
     }

@@ -215,3 +215,11 @@ public class ConfiguracaoWhatsAppInput
     public string? IaChaveApi { get; set; }
     public string? IaModelo { get; set; }
 }
+
+public class WhatsAppSimuladorViewModel
+{
+    public required string Telefone { get; init; }
+    public bool Ativo { get; init; }
+    public bool RoboAtivo { get; init; }
+    public PortalVendas.Application.WhatsApp.ConversaDetalhe? Conversa { get; init; }
+}

@@ -8,7 +8,9 @@ public enum ProvedorWhatsApp : byte
     /// <summary>WhatsApp Cloud API (oficial da Meta).</summary>
     Meta = 1,
     /// <summary>Evolution API (não oficial, lê o QR Code do aparelho da loja).</summary>
-    Evolution = 2
+    Evolution = 2,
+    /// <summary>Testes sem WhatsApp: as respostas do robô só ficam gravadas e aparecem no simulador do painel.</summary>
+    Simulador = 3
 }
 
 /// <summary>Uma opção de menu. O cliente escolhe tocando no botão/lista ou digitando o número.</summary>

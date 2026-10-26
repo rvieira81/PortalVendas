@@ -98,6 +98,16 @@ oi → menu (Ver produtos · Buscar · Meu carrinho · Meus pedidos · Atendente
 
 ## Testar na sua máquina
 
+### Sem WhatsApp: simulador do painel (Visual Studio, F5)
+
+1. Emita uma licença de teste com `--modulo whatsapp` e instale em *Identidade da loja* (em localhost qualquer domínio serve).
+2. *Painel → WhatsApp → Configuração*: provedor **Simulador**, robô ligado, salve.
+3. *Painel → WhatsApp → Simulador*: escreva como cliente ("oi", "1", "fone"…) ou toque nas opções numeradas.
+   O Pix vem do Mercado Pago de teste (user-secrets); o pedido aparece em *Pedidos* com o canal WhatsApp e,
+   ao mudar o status, o aviso aparece na conversa. "Recomeçar teste" apaga a conversa; outro número = outro cliente.
+
+### Com WhatsApp de verdade
+
 O provedor precisa alcançar o site pela internet. Use um túnel (ex.: `cloudflared tunnel --url https://localhost:7180`
 ou ngrok), coloque o endereço do túnel em `Loja:UrlBase` e emita uma licença de teste com esse domínio e `--modulo whatsapp`.
 Para a API oficial, o app da Meta em modo de desenvolvimento oferece um número de teste e até 5 números de destino.
